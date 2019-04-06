@@ -35,8 +35,12 @@ namespace DSN {
         }
 
         public void Stop() {
-            batchDirWatcher.EnableRaisingEvents = false;
-            configFileWatcher.EnableRaisingEvents = false;
+            if (batchDirWatcher != null) {
+                batchDirWatcher.EnableRaisingEvents = false;
+            }
+            if (configFileWatcher != null) {
+                configFileWatcher.EnableRaisingEvents = false;
+            }
         }
 
         private void ListenForBatchDir() {
