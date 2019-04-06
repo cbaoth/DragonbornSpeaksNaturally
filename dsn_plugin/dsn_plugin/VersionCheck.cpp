@@ -189,7 +189,8 @@ bool VersionCheck::IsCompatibleExeVersion() {
 	}
 	else if (version > kSkyrimCurVersion) {
 		Log::info("This version of Skyrim is newer than the version supported by DSN");
-		Log::info("Please install the latest version of DSN once it's available");
+		Log::info("Please install the latest version of DSN once it's available or downgrade your Skyrim to " + SKYRIM_VERSION_STR[g_SkyrimType]);
+		Log::info("Skyrim downgrading guide: https://www.nexusmods.com/skyrimspecialedition/mods/19658");
 		Log::hex("Skyrim Version: ", version);
 		return false;
 	}

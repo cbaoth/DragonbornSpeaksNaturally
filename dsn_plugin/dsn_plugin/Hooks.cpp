@@ -3,6 +3,7 @@
 #include "Log.h"
 #include "common/IPrefix.h"
 #include "skse64_common/SafeWrite.h"
+#include "skse64/ScaleformAPI.h"
 #include "skse64/ScaleformMovie.h"
 #include "skse64/ScaleformValue.h"
 #include "skse64/GameInput.h"
@@ -22,8 +23,85 @@ static int lastMenuState = -1;
 typedef UInt32 getDefaultCompiler(void* unk01, char* compilerName, UInt32 unk03);
 typedef void executeCommand(UInt32* unk01, void* parser, char* command);
 
+static void __cdecl Hook_Loop()
+{
+	if (dialogueMenu != NULL)
+	{
+		// Menu exiting, avoid NPE
+		if (dialogueMenu->GetPause() == 0)
+		{
+			dialogueMenu = NULL;
+			SpeechRecognitionClient::getInstance()->StopDialogue();
+			return;
+		}
+		GFxValue stateVal;
+		dialogueMenu->GetVariable(&stateVal, "_level0.DialogueMenu_mc.eMenuState");
+		int menuState = stateVal.data.number;
+		desiredTopicIndex = SpeechRecognitionClient::getInstance()->ReadSelectedIndex();
+		if (menuState != lastMenuState) {
+
+			lastMenuState = menuState;
+			if (menuState == 2) // NPC Responding
+			{
+				// fix issue #11 (SSE crash when teleport with a dialogue line).
+				// It seems no side effects have been found at present.
+				dialogueMenu = NULL;
+				SpeechRecognitionClient::getInstance()->StopDialogue();
+				return;
+			}
+		}
+		if (desiredTopicIndex >= 0) {
+			GFxValue topicIndexVal;
+			dialogueMenu->GetVariable(&topicIndexVal, "_level0.DialogueMenu_mc.TopicList.iSelectedIndex");
+
+			int currentTopicIndex = topicIndexVal.data.number;
+			if (currentTopicIndex != desiredTopicIndex) {
+
+				dialogueMenu->Invoke("_level0.DialogueMenu_mc.TopicList.SetSelectedTopic", NULL, "%d", desiredTopicIndex);
+				dialogueMenu->Invoke("_level0.DialogueMenu_mc.TopicList.doSetSelectedIndex", NULL, "%d", desiredTopicIndex);
+				dialogueMenu->Invoke("_level0.DialogueMenu_mc.TopicList.UpdateList", NULL, NULL, 0);
+			}
+
+			dialogueMenu->Invoke("_level0.DialogueMenu_mc.onSelectionClick", NULL, "%d", 1.0);
+		}
+		else if (desiredTopicIndex == -2) { // Indicates a "goodbye" phrase was spoken, hide the menu
+			dialogueMenu->Invoke("_level0.DialogueMenu_mc.StartHideMenu", NULL, NULL, 0);
+		}
+	}
+	else
+	{
+		std::string command = SpeechRecognitionClient::getInstance()->PopCommand();
+		if (command != "") {
+			ConsoleCommandRunner::RunCommand(command);
+			Log::info("run command: " + command);
+		}
+
+		if (g_SkyrimType == VR) {
+			FavoritesMenuManager::getInstance()->ProcessEquipCommands();
+		}
+	}
+}
+
+class RunCommandSink : public BSTEventSink<InputEvent> {
+	EventResult ReceiveEvent(InputEvent ** evnArr, InputEventDispatcher * dispatcher) override {
+		Hook_Loop();
+		return kEvent_Continue;
+	}
+};
+
 static void __cdecl Hook_Invoke(GFxMovieView* movie, char * gfxMethod, GFxValue* argv, UInt32 argc)
 {
+	static bool inited = false;
+	if (!inited) {
+		runCommandSink = new RunCommandSink;
+		// Currently in the source code directory is the latest version of SKSE64 instead of SKSEVR,
+		// so we can call GetSingleton() directly instead of use a RelocAddr.
+		auto inputEventDispatcher = InputEventDispatcher::GetSingleton();
+		inputEventDispatcher->AddEventSink(runCommandSink);
+		inited = true;
+		Log::info("RunCommandSink Initialized");
+	}
+
 	if (argc >= 1)
 	{
 		GFxValue commandVal = argv[0];
@@ -61,157 +139,39 @@ static void __cdecl Hook_PostLoad() {
 	}
 }
 
-static void runCommand() {
-	std::string command = SpeechRecognitionClient::getInstance()->PopCommand();
-	if (command != "") {
-		ConsoleCommandRunner::RunCommand(command);
-		Log::info("run command: " + command);
-	}
-
-	if (g_SkyrimType == VR) {
-		FavoritesMenuManager::getInstance()->ProcessEquipCommands();
-	}
-}
-
-class RunCommandSink : public BSTEventSink<InputEvent> {
-	EventResult ReceiveEvent(InputEvent ** evnArr, InputEventDispatcher * dispatcher) override {
-		runCommand();
-		return kEvent_Continue;
-	}
-};
-
-static void __cdecl Hook_Loop()
-{
-	if (dialogueMenu != NULL)
-	{
-		// Menu exiting, avoid NPE
-		if (dialogueMenu->GetPause() == 0)
-		{
-			dialogueMenu = NULL;
-			SpeechRecognitionClient::getInstance()->StopDialogue();
-			return;
-		}
-		GFxValue stateVal;
-		dialogueMenu->GetVariable(&stateVal, "_level0.DialogueMenu_mc.eMenuState");
-		int menuState = stateVal.data.number;
-		desiredTopicIndex = SpeechRecognitionClient::getInstance()->ReadSelectedIndex();
-		if (menuState != lastMenuState) {
-		
-			lastMenuState = menuState;
-			if (menuState == 2) // NPC Responding
-			{
-				// fix issue #11 (SSE crash when teleport with a dialogue line).
-				// It seems no side effects have been found at present.
-				dialogueMenu = NULL;
-				SpeechRecognitionClient::getInstance()->StopDialogue();
-				return;
-			}
-		}
-		if (desiredTopicIndex >= 0) {
-			GFxValue topicIndexVal;
-			dialogueMenu->GetVariable(&topicIndexVal, "_level0.DialogueMenu_mc.TopicList.iSelectedIndex");
-
-			int currentTopicIndex = topicIndexVal.data.number;
-			if (currentTopicIndex != desiredTopicIndex) {
-
-				dialogueMenu->Invoke("_level0.DialogueMenu_mc.TopicList.SetSelectedTopic", NULL, "%d", desiredTopicIndex);
-				dialogueMenu->Invoke("_level0.DialogueMenu_mc.TopicList.doSetSelectedIndex", NULL, "%d", desiredTopicIndex);
-				dialogueMenu->Invoke("_level0.DialogueMenu_mc.TopicList.UpdateList", NULL, NULL, 0);
-			}
-
-			dialogueMenu->Invoke("_level0.DialogueMenu_mc.onSelectionClick", NULL, "%d", 1.0);
-		}
-		else if (desiredTopicIndex == -2) { // Indicates a "goodbye" phrase was spoken, hide the menu
-			dialogueMenu->Invoke("_level0.DialogueMenu_mc.StartHideMenu", NULL, NULL, 0);
-		}
-	}
-	else
-	{
-		if (g_SkyrimType == VR) {
-			runCommand();
-		}
-		else {
-			// The latest version of SkyrimSE will not enter the loop if no menu is displayed.
-			// So we use InputEventSink to get a continuous running loop.
-			static bool inited = false;
-			if (!inited) {
-				Log::info("RunCommandSink Initialized");
-				runCommandSink = new RunCommandSink;
-				// Currently in the source code directory is the latest version of SKSE64 instead of SKSEVR,
-				// so we can call GetSingleton() directly instead of use a RelocAddr.
-				auto inputEventDispatcher = InputEventDispatcher::GetSingleton();
-				inputEventDispatcher->AddEventSink(runCommandSink);
-				inited = true;
-			}
-		}
-	}
-}
-
-static uintptr_t loopEnter = 0x0;
-static uintptr_t loopCallTarget = 0x0;
 static uintptr_t invokeTarget = 0x0;
 static uintptr_t invokeReturn = 0x0;
 static uintptr_t loadEventEnter = 0x0;
 static uintptr_t loadEventTarget = 0x0;
 
-static uintptr_t INVOKE_ENTER_ADDR[3];
-static uintptr_t INVOKE_TARGET_ADDR[3];
-
-static uintptr_t LOOP_ENTER_ADDR[3];
-static uintptr_t LOOP_TARGET_ADDR[3];
-
-static uintptr_t LOAD_EVENT_ENTER_ADDR[3];
-static uintptr_t LOAD_EVENT_TARGET_ADDR[3];
-
-
 void Hooks_Inject(void)
 {
-	// "call" Scaleform invocation
-	INVOKE_ENTER_ADDR[SE] = 0xED68EE;
-	INVOKE_ENTER_ADDR[VR] = 0xF343CE;
-	INVOKE_ENTER_ADDR[VR_BETA] = 0xF343CE;
+	uintptr_t kHook_Invoke_Enter = InvokeFunction.GetUIntPtr() + 0xEE;
 
-	// Target of "call" invocation
-	INVOKE_TARGET_ADDR[SE] = 0xED7DF0; // SkyrimSE 0xED7DF0 0x00007FF7C38D7DF0
-	INVOKE_TARGET_ADDR[VR] = 0xF30F20; // SkyrimVR 0xF2D9B0 0x00007FF73284D9B0
-	INVOKE_TARGET_ADDR[VR_BETA] = 0xF30F20; // SkyrimVR 0xF2D9B0 0x00007FF73284D9B0
+	// x64 "call" instruction: E8 <32-bit target offset>
+	uint32_t *pInvokeTargetOffset = (uint32_t *)(kHook_Invoke_Enter + 1);
 
-	// "CurrentTime" GFxMovie.SetVariable (rax+80)
-	LOOP_ENTER_ADDR[SE] = 0xECD637; // SkyrimSE 0xECD637 0x00007FF712D4D637
-	LOOP_ENTER_ADDR[VR] = 0x8AC25C; // 0x8AA36C 0x00007FF7321CA36C SKSE UIManager process hook:  0x00F17200 + 0xAD8
-	LOOP_ENTER_ADDR[VR_BETA] = 0x8AC25C; // 0x8AA36C 0x00007FF7321CA36C SKSE UIManager process hook:  0x00F17200 + 0xAD8
-	
-	// "CurrentTime" GFxMovie.SetVariable Target (rax+80)
-	LOOP_TARGET_ADDR[SE] = 0xF28C90; // SkyrimSE 0xF28C90 0x00007FF712DA8C90
-	LOOP_TARGET_ADDR[VR] = 0xF85C50; // SkyrimVR 0xF82710 0x00007FF7328A2710 SKSE UIManager process hook:  0x00F1C650
-	LOOP_TARGET_ADDR[VR_BETA] = 0xF85C50; // SkyrimVR 0xF82710 0x00007FF7328A2710 SKSE UIManager process hook:  0x00F1C650
+	// <call target address> = <call instruction beginning address> + <call instruction's size (5 bytes)> + <32-bit target offset>
+	uintptr_t kHook_Invoke_Target = kHook_Invoke_Enter + 5 + *pInvokeTargetOffset;
 
-	// "Finished loading game" print statement, initialize player orientation?
-	LOAD_EVENT_ENTER_ADDR[VR] = 0x5852A4;
-
-	// Initialize player orientation target addr
-	LOAD_EVENT_TARGET_ADDR[VR] = 0x6AB5E0;
-
-	RelocAddr<uintptr_t> kHook_Invoke_Enter(INVOKE_ENTER_ADDR[g_SkyrimType]);
-	RelocAddr<uintptr_t> kHook_Invoke_Target(INVOKE_TARGET_ADDR[g_SkyrimType]);
-	RelocAddr<uintptr_t> kHook_Loop_Enter(LOOP_ENTER_ADDR[g_SkyrimType]);
-	RelocAddr<uintptr_t> kHook_Loop_Call_Target(LOOP_TARGET_ADDR[g_SkyrimType]);
 	uintptr_t kHook_Invoke_Return = kHook_Invoke_Enter + 0x14;
 
 	invokeTarget = kHook_Invoke_Target;
 	invokeReturn = kHook_Invoke_Return;
-	loopCallTarget = kHook_Loop_Call_Target;
-	loopEnter = kHook_Loop_Enter;
 
-	Log::address("Loop Enter: ", kHook_Loop_Enter);
-	Log::address("Loop Target: ", kHook_Loop_Call_Target);
+	Log::address("Invoke Enter: ", kHook_Invoke_Enter);
+	Log::address("Invoke Target: ", kHook_Invoke_Target);
 
 	/***
 	Post Load HOOK - VR Only
 	**/
 	if (g_SkyrimType == VR) {
-		RelocAddr<uintptr_t> kHook_LoadEvent_Enter(LOAD_EVENT_ENTER_ADDR[g_SkyrimType]);
-		RelocAddr<uintptr_t> kHook_LoadEvent_Target(LOAD_EVENT_TARGET_ADDR[g_SkyrimType]);
+		// "Finished loading game" print statement, initialize player orientation?
+		RelocAddr<uintptr_t> kHook_LoadEvent_Enter(0x5852A4);
+
+		// Initialize player orientation target addr
+		RelocAddr<uintptr_t> kHook_LoadEvent_Target(0x6AB5E0);
+
 		loadEventEnter = kHook_LoadEvent_Enter;
 		loadEventTarget = kHook_LoadEvent_Target;
 
@@ -243,66 +203,41 @@ void Hooks_Inject(void)
 	}
 
 	/***
-	Loop HOOK
-	**/
-	struct Hook_Loop_Code : Xbyak::CodeGenerator {
-		Hook_Loop_Code(void * buf) : Xbyak::CodeGenerator(4096, buf)
-		{
-			// Invoke original virtual method
-			mov(rax, loopCallTarget);
-			call(rax);
-
-			// Call our method
-			sub(rsp, 0x30);
-			mov(rax, (uintptr_t)Hook_Loop);
-			call(rax);
-			add(rsp, 0x30);
-
-			// Return 
-			mov(rax, loopEnter + 0x6); // set to 0x5 when branching for SKSE UIManager
-			jmp(rax);
-		}
-	};
-	void * codeBuf = g_localTrampoline.StartAlloc();
-	Hook_Loop_Code loopCode(codeBuf);
-	g_localTrampoline.EndAlloc(loopCode.getCurr());
-	//g_branchTrampoline.Write6Branch(kHook_Loop_Enter, uintptr_t(loopCode.getCode()));
-	g_branchTrampoline.Write5Branch(kHook_Loop_Enter, uintptr_t(loopCode.getCode()));
-
-	/***
 	Invoke "call" HOOK
 	**/
-	struct Hook_Entry_Code : Xbyak::CodeGenerator {
-		Hook_Entry_Code(void * buf) : Xbyak::CodeGenerator(4096, buf)
-		{
-			push(rcx);
-			push(rdx);
-			push(r8);
-			push(r9);
-			sub(rsp, 0x30);
-			mov(rax, (uintptr_t)Hook_Invoke);
-			call(rax);
-			add(rsp, 0x30);
-			pop(r9);
-			pop(r8);
-			pop(rdx);
-			pop(rcx);
-	
-			mov(rax, invokeTarget);
-			call(rax);
+	{
+		struct Hook_Entry_Code : Xbyak::CodeGenerator {
+			Hook_Entry_Code(void * buf) : Xbyak::CodeGenerator(4096, buf)
+			{
+				push(rcx);
+				push(rdx);
+				push(r8);
+				push(r9);
+				sub(rsp, 0x30);
+				mov(rax, (uintptr_t)Hook_Invoke);
+				call(rax);
+				add(rsp, 0x30);
+				pop(r9);
+				pop(r8);
+				pop(rdx);
+				pop(rcx);
 
-			mov(rbx, ptr[rsp + 0x50]);
-			mov(rsi, ptr[rsp + 0x60]);
-			add(rsp, 0x40);
-			pop(rdi);
+				mov(rax, invokeTarget);
+				call(rax);
 
-			mov(rax, invokeReturn);
-			jmp(rax);
-		}
-	};
+				mov(rbx, ptr[rsp + 0x50]);
+				mov(rsi, ptr[rsp + 0x60]);
+				add(rsp, 0x40);
+				pop(rdi);
 
-	codeBuf = g_localTrampoline.StartAlloc();
-	Hook_Entry_Code entryCode(codeBuf);
-	g_localTrampoline.EndAlloc(entryCode.getCurr());
-	g_branchTrampoline.Write5Branch(kHook_Invoke_Enter, uintptr_t(entryCode.getCode()));
+				mov(rax, invokeReturn);
+				jmp(rax);
+			}
+		};
+
+		void * codeBuf = g_localTrampoline.StartAlloc();
+		Hook_Entry_Code entryCode(codeBuf);
+		g_localTrampoline.EndAlloc(entryCode.getCurr());
+		g_branchTrampoline.Write5Branch(kHook_Invoke_Enter, uintptr_t(entryCode.getCode()));
+	}
 }

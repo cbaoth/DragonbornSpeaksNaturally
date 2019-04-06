@@ -4,22 +4,11 @@
 #include "skse64_common/Relocation.h"
 #include "Log.h"
 
-uintptr_t MENU_MANAGER_ADDR[3] = {
-	0x01EE5B20,	// SE
-	0x01F83200, // VR
-	0x01F83200	// VR BETA
-};
-
-MenuManager* DSNMenuManager::GetSingleton() {
-	RelocPtr<MenuManager *> ptr(MENU_MANAGER_ADDR[g_SkyrimType]);
-	return *ptr;
-}
-
 /*
 NOTE: Expose private fields on MenuManager and tHashSet to avoid requiring hooks into updated code
 */
 IMenu * DSNMenuManager::GetOrCreateMenu(const char *menuName) {
-	MenuManager *menuManager = DSNMenuManager::GetSingleton();
+	MenuManager *menuManager = MenuManager::GetSingleton();
 
 	if (!menuManager)
 		return NULL;

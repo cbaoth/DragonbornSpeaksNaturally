@@ -5,6 +5,5 @@
 class DSNMenuManager // Copy of SKSE MenuManager, but with create menu method
 {
 public:
-	static MenuManager * GetSingleton();
 	static IMenu * GetOrCreateMenu(const char * menuName);
 };
