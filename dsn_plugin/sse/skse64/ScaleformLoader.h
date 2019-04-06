@@ -6,8 +6,6 @@ class NiTexture;
 class IMenu;
 class GImageInfoBase;
 
-extern bool g_logScaleform;
-
 class GFxImageLoader : public GFxState
 {
 public:
@@ -20,31 +18,24 @@ public:
 	virtual ~BSScaleformImageLoader();
 	virtual GImageInfoBase*	LoadImage(const char * url);
 
-	MEMBER_FN_PREFIX(BSScaleformImageLoader);
-	DEFINE_MEMBER_FN(AddVirtualImage, UInt8, 0x00F45090, NiTexture ** texture);
-	DEFINE_MEMBER_FN(ReleaseVirtualImage, UInt8, 0x00F45560, NiTexture ** texture);
+	DEFINE_MEMBER_FN_1(AddVirtualImage, UInt8, 0x00F44EA0, NiTexture ** texture);
+	DEFINE_MEMBER_FN_1(ReleaseVirtualImage, UInt8, 0x00F45370, NiTexture ** texture);
 };
 
 class GFxLoader
 {
 public:
-	UInt32			unk00;					// 00
-	GFxStateBag		* stateBag;				// 04
-	UInt32			unk08;					// 08
-	UInt32			unk0C;					// 0C
-	BSScaleformImageLoader	* imageLoader;	// 10
+	UInt64			unk00;					// 00
+	GFxStateBag		* stateBag;				// 08
+	UInt64			unk08;					// 10
+	UInt64			unk10;					// 18
+	BSScaleformImageLoader	* imageLoader;	// 20
 
-	static GFxLoader * GetSingleton();	
-
-
+	static GFxLoader * GetSingleton();
 
 	MEMBER_FN_PREFIX(GFxLoader);
-	DEFINE_MEMBER_FN(ctor, GFxLoader *, 0x00ECDE10);
+	DEFINE_MEMBER_FN(ctor, GFxLoader *, 0x00ECDC20);
 
 	// Note: Probably in subclass
-	DEFINE_MEMBER_FN(LoadMovie, bool, 0x00ECE4D0, IMenu* menu, GFxMovieView** viewOut, const char* name, int arg4, float arg5);
-
-	static UInt64* getCtorHookAddress();
-
-	GFxLoader* ctor_Hook(void);
+	DEFINE_MEMBER_FN(LoadMovie, bool, 0x00ECE2E0, IMenu* menu, GFxMovieView** viewOut, const char* name, int arg4, float arg5);
 };

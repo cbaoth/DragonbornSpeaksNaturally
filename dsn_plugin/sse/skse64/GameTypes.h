@@ -79,12 +79,12 @@ public:
 	//void LockForRead();
 	//void LockForWrite();
 	MEMBER_FN_PREFIX(BSReadWriteLock);
-	DEFINE_MEMBER_FN(LockForRead, void, 0x00C074C0);
-	DEFINE_MEMBER_FN(LockForWrite, void, 0x00C07540);
-	DEFINE_MEMBER_FN(UnlockRead, void, 0x00C07780);
-	DEFINE_MEMBER_FN(UnlockWrite, void, 0x00C07790);
-	DEFINE_MEMBER_FN(LockForReadAndWrite, void, 0x00C07640);
-	DEFINE_MEMBER_FN(TryLockForWrite, bool, 0x00C07730);
+	DEFINE_MEMBER_FN(LockForRead, void, 0x00C072D0);
+	DEFINE_MEMBER_FN(LockForWrite, void, 0x00C07350);
+	DEFINE_MEMBER_FN(UnlockRead, void, 0x00C07590);
+	DEFINE_MEMBER_FN(UnlockWrite, void, 0x00C075A0);
+	DEFINE_MEMBER_FN(LockForReadAndWrite, void, 0x00C07450);
+	DEFINE_MEMBER_FN(TryLockForWrite, bool, 0x00C07540);
 };
 STATIC_ASSERT(sizeof(BSReadWriteLock) == 0x8);
 
@@ -127,11 +127,12 @@ public:
 		const char	* data;
 
 		MEMBER_FN_PREFIX(Ref);
-		DEFINE_MEMBER_FN(ctor, Ref *, 0x00C28930, const char * buf);
-		DEFINE_MEMBER_FN(ctor_ref, Ref *, 0x00C289C0, const Ref & rhs);
-		DEFINE_MEMBER_FN(Set, Ref *, 0x00C28AA0, const char * buf);
+		DEFINE_MEMBER_FN(ctor, Ref *, 0x00C28740, const char * buf);
+		DEFINE_MEMBER_FN(ctor_ref, Ref *, 0x00C287D0, const Ref & rhs);
+		DEFINE_MEMBER_FN(Set, Ref *, 0x00C288B0, const char * buf);
+		DEFINE_MEMBER_FN(Set_ref, Ref *, 0x00C28970, const Ref & rhs);
 		// 77D2390F6DC57138CF0E5266EB5BBB0ACABDFBE3+A0
-		DEFINE_MEMBER_FN(Release, void, 0x00C28A80);
+		DEFINE_MEMBER_FN(Release, void, 0x00C28890);
 
 		Ref();
 		Ref(const char * buf);
@@ -183,7 +184,7 @@ public:
 	const char *	Get(void) const;
 
 	MEMBER_FN_PREFIX(BSString);
-	DEFINE_MEMBER_FN(Set, bool, 0x000FA080, const char * str, UInt32 len);	// len default 0
+	DEFINE_MEMBER_FN(Set, bool, 0x000F9E90, const char * str, UInt32 len);	// len default 0
 
 private:
 	char	* m_data;	// 00
@@ -235,7 +236,7 @@ public:
 		return true;
 	}
 
-	bool CopyFrom(tArray<T> * rhs)
+	bool CopyFrom(const tArray<T> * rhs)
 	{
 		if (rhs->count == 0) return false;
 		if (!rhs->entries) return false;
@@ -285,7 +286,7 @@ public:
 				return false;
 		}
  
-		entries[count] = entry;
+		new (&entries[count]) T(entry);
 		count++;
 		return true;
 	};
