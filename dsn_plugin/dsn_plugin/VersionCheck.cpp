@@ -147,7 +147,7 @@ bool VersionCheck::IsCompatibleExeVersion() {
 
 	if (procName == "SkyrimVR.exe") {
 		g_SkyrimType = VR;
-		
+
 		#ifndef IS_VR
 			Log::info("This dll is built for SkyrimSE and may not compatible with SkyrimVR.");
 			Log::info("Please consider switching to the dll for SkyrimVR.");
@@ -174,9 +174,6 @@ bool VersionCheck::IsCompatibleExeVersion() {
 	{
 		return false;
 	}
-
-	if (version == SKYRIM_VERSION[VR_BETA])
-		g_SkyrimType = VR_BETA;
 
 	Log::info("Process name: " + procName);
 

@@ -146,9 +146,9 @@ static uintptr_t invokeReturn = 0x0;
 static uintptr_t loadEventEnter = 0x0;
 static uintptr_t loadEventTarget = 0x0;
 
-static uintptr_t LOOP_ENTER_ADDR[3];
-static uintptr_t LOOP_TARGET_ADDR[3];
-static uintptr_t LOAD_EVENT_ENTER_ADDR[3];
+static uintptr_t LOOP_ENTER_ADDR[2];
+static uintptr_t LOOP_TARGET_ADDR[2];
+static uintptr_t LOAD_EVENT_ENTER_ADDR[2];
 
 uintptr_t getCallTarget(uintptr_t callInstructionAddr) {
 	// x64 "call" instruction: E8 <32-bit target offset>
@@ -163,11 +163,9 @@ void Hooks_Inject(void)
 {
 	// "CurrentTime" GFxMovie.SetVariable (rax+80)
 	LOOP_ENTER_ADDR[VR] = 0x8AC25C; // 0x8AA36C 0x00007FF7321CA36C SKSE UIManager process hook:  0x00F17200 + 0xAD8
-	LOOP_ENTER_ADDR[VR_BETA] = 0x8AC25C; // 0x8AA36C 0x00007FF7321CA36C SKSE UIManager process hook:  0x00F17200 + 0xAD8
 
 	// "CurrentTime" GFxMovie.SetVariable Target (rax+80)
 	LOOP_TARGET_ADDR[VR] = 0xF85C50; // SkyrimVR 0xF82710 0x00007FF7328A2710 SKSE UIManager process hook:  0x00F1C650
-	LOOP_TARGET_ADDR[VR_BETA] = 0xF85C50; // SkyrimVR 0xF82710 0x00007FF7328A2710 SKSE UIManager process hook:  0x00F1C650
 
 	// "Finished loading game" print statement, initialize player orientation?
 	LOAD_EVENT_ENTER_ADDR[VR] = 0x5852A4;
@@ -210,7 +208,7 @@ void Hooks_Inject(void)
 				call(rax);
 				add(rsp, 0x30);
 
-				// Return 
+				// Return
 				mov(rax, loadEventEnter + 0x5);
 				jmp(rax);
 			}
@@ -222,9 +220,9 @@ void Hooks_Inject(void)
 	}
 
 	/***
-	Loop HOOK - for VR and VR_BETA
+	Loop HOOK - VR Only
 	**/
-	if (g_SkyrimType == VR || g_SkyrimType == VR_BETA) {
+	if (g_SkyrimType == VR) {
 		RelocAddr<uintptr_t> kHook_Loop_Enter(LOOP_ENTER_ADDR[g_SkyrimType]);
 		RelocAddr<uintptr_t> kHook_Loop_Call_Target(LOOP_TARGET_ADDR[g_SkyrimType]);
 
@@ -247,7 +245,7 @@ void Hooks_Inject(void)
 				call(rax);
 				add(rsp, 0x30);
 
-				// Return 
+				// Return
 				mov(rax, loopEnter + 0x6); // set to 0x5 when branching for SKSE UIManager
 				jmp(rax);
 			}
