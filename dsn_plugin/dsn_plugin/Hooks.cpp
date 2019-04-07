@@ -92,7 +92,7 @@ class RunCommandSink : public BSTEventSink<InputEvent> {
 static void __cdecl Hook_Invoke(GFxMovieView* movie, char * gfxMethod, GFxValue* argv, UInt32 argc)
 {
 	static bool inited = false;
-	if (!inited) {
+	if (!inited && g_SkyrimType == SE) {
 		runCommandSink = new RunCommandSink;
 		// Currently in the source code directory is the latest version of SKSE64 instead of SKSEVR,
 		// so we can call GetSingleton() directly instead of use a RelocAddr.
@@ -139,46 +139,63 @@ static void __cdecl Hook_PostLoad() {
 	}
 }
 
+static uintptr_t loopEnter = 0x0;
+static uintptr_t loopCallTarget = 0x0;
 static uintptr_t invokeTarget = 0x0;
 static uintptr_t invokeReturn = 0x0;
 static uintptr_t loadEventEnter = 0x0;
 static uintptr_t loadEventTarget = 0x0;
 
-void Hooks_Inject(void)
-{
-	RelocAddr<uintptr_t> kSkyrimBaseAddr(0);
-	uintptr_t kHook_Invoke_Enter = InvokeFunction.GetUIntPtr() + 0xEE;
+static uintptr_t LOOP_ENTER_ADDR[3];
+static uintptr_t LOOP_TARGET_ADDR[3];
+static uintptr_t LOAD_EVENT_ENTER_ADDR[3];
 
+uintptr_t getCallTarget(uintptr_t callInstructionAddr) {
 	// x64 "call" instruction: E8 <32-bit target offset>
 	// Note that the offset can be positive or negative.
-	int32_t *pInvokeTargetOffset = (int32_t *)(kHook_Invoke_Enter + 1);
+	int32_t *pInvokeTargetOffset = (int32_t *)(callInstructionAddr + 1);
 
 	// <call target address> = <call instruction beginning address> + <call instruction's size (5 bytes)> + <32-bit target offset>
-	uintptr_t kHook_Invoke_Target = kHook_Invoke_Enter + 5 + *pInvokeTargetOffset;
+	return callInstructionAddr + 5 + *pInvokeTargetOffset;
+}
 
+void Hooks_Inject(void)
+{
+	// "CurrentTime" GFxMovie.SetVariable (rax+80)
+	LOOP_ENTER_ADDR[VR] = 0x8AC25C; // 0x8AA36C 0x00007FF7321CA36C SKSE UIManager process hook:  0x00F17200 + 0xAD8
+	LOOP_ENTER_ADDR[VR_BETA] = 0x8AC25C; // 0x8AA36C 0x00007FF7321CA36C SKSE UIManager process hook:  0x00F17200 + 0xAD8
+
+	// "CurrentTime" GFxMovie.SetVariable Target (rax+80)
+	LOOP_TARGET_ADDR[VR] = 0xF85C50; // SkyrimVR 0xF82710 0x00007FF7328A2710 SKSE UIManager process hook:  0x00F1C650
+	LOOP_TARGET_ADDR[VR_BETA] = 0xF85C50; // SkyrimVR 0xF82710 0x00007FF7328A2710 SKSE UIManager process hook:  0x00F1C650
+
+	// "Finished loading game" print statement, initialize player orientation?
+	LOAD_EVENT_ENTER_ADDR[VR] = 0x5852A4;
+
+	RelocAddr<uintptr_t> kSkyrimBaseAddr(0);
+	uintptr_t kHook_Invoke_Enter = InvokeFunction.GetUIntPtr() + 0xEE;
+	uintptr_t kHook_Invoke_Target = getCallTarget(kHook_Invoke_Enter);
 	uintptr_t kHook_Invoke_Return = kHook_Invoke_Enter + 0x14;
 
 	invokeTarget = kHook_Invoke_Target;
 	invokeReturn = kHook_Invoke_Return;
 
-	Log::address("Invoke Enter: ", kHook_Invoke_Enter - kSkyrimBaseAddr);
-	Log::address("Invoke Target: ", kHook_Invoke_Target - kSkyrimBaseAddr);
+	Log::address("Base Address: ", kSkyrimBaseAddr);
+	Log::address("Invoke Enter: +", kHook_Invoke_Enter - kSkyrimBaseAddr);
+	Log::address("Invoke Target: +", kHook_Invoke_Target - kSkyrimBaseAddr);
 
 	/***
 	Post Load HOOK - VR Only
 	**/
 	if (g_SkyrimType == VR) {
-		// "Finished loading game" print statement, initialize player orientation?
-		RelocAddr<uintptr_t> kHook_LoadEvent_Enter(0x5852A4);
-
-		// Initialize player orientation target addr
-		RelocAddr<uintptr_t> kHook_LoadEvent_Target(0x6AB5E0);
+		RelocAddr<uintptr_t> kHook_LoadEvent_Enter(LOAD_EVENT_ENTER_ADDR[g_SkyrimType]);
+		uintptr_t kHook_LoadEvent_Target = getCallTarget(kHook_LoadEvent_Enter);
 
 		loadEventEnter = kHook_LoadEvent_Enter;
 		loadEventTarget = kHook_LoadEvent_Target;
 
-		Log::address("LoadEvent Enter: ", kHook_LoadEvent_Enter);
-		Log::address("LoadEvent Target: ", kHook_LoadEvent_Target);
+		Log::address("LoadEvent Enter: +", kHook_LoadEvent_Enter - kSkyrimBaseAddr);
+		Log::address("LoadEvent Target: +", kHook_LoadEvent_Target - kSkyrimBaseAddr);
 
 		struct Hook_LoadEvent_Code : Xbyak::CodeGenerator {
 			Hook_LoadEvent_Code(void * buf) : Xbyak::CodeGenerator(4096, buf)
@@ -202,6 +219,44 @@ void Hooks_Inject(void)
 		Hook_LoadEvent_Code loadEventCode(codeBuf);
 		g_localTrampoline.EndAlloc(loadEventCode.getCurr());
 		g_branchTrampoline.Write5Branch(kHook_LoadEvent_Enter, uintptr_t(loadEventCode.getCode()));
+	}
+
+	/***
+	Loop HOOK - for VR and VR_BETA
+	**/
+	if (g_SkyrimType == VR || g_SkyrimType == VR_BETA) {
+		RelocAddr<uintptr_t> kHook_Loop_Enter(LOOP_ENTER_ADDR[g_SkyrimType]);
+		RelocAddr<uintptr_t> kHook_Loop_Call_Target(LOOP_TARGET_ADDR[g_SkyrimType]);
+
+		loopCallTarget = kHook_Loop_Call_Target;
+		loopEnter = kHook_Loop_Enter;
+
+		Log::address("Loop Enter: +", kHook_Loop_Enter - kSkyrimBaseAddr);
+		Log::address("Loop Target: +", kHook_Loop_Call_Target - kSkyrimBaseAddr);
+
+		struct Hook_Loop_Code : Xbyak::CodeGenerator {
+			Hook_Loop_Code(void * buf) : Xbyak::CodeGenerator(4096, buf)
+			{
+				// Invoke original virtual method
+				mov(rax, loopCallTarget);
+				call(rax);
+
+				// Call our method
+				sub(rsp, 0x30);
+				mov(rax, (uintptr_t)Hook_Loop);
+				call(rax);
+				add(rsp, 0x30);
+
+				// Return 
+				mov(rax, loopEnter + 0x6); // set to 0x5 when branching for SKSE UIManager
+				jmp(rax);
+			}
+		};
+		void * codeBuf = g_localTrampoline.StartAlloc();
+		Hook_Loop_Code loopCode(codeBuf);
+		g_localTrampoline.EndAlloc(loopCode.getCurr());
+		//g_branchTrampoline.Write6Branch(kHook_Loop_Enter, uintptr_t(loopCode.getCode()));
+		g_branchTrampoline.Write5Branch(kHook_Loop_Enter, uintptr_t(loopCode.getCode()));
 	}
 
 	/***
