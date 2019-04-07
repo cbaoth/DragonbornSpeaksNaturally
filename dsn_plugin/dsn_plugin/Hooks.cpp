@@ -146,10 +146,12 @@ static uintptr_t loadEventTarget = 0x0;
 
 void Hooks_Inject(void)
 {
+	RelocAddr<uintptr_t> kSkyrimBaseAddr(0);
 	uintptr_t kHook_Invoke_Enter = InvokeFunction.GetUIntPtr() + 0xEE;
 
 	// x64 "call" instruction: E8 <32-bit target offset>
-	uint32_t *pInvokeTargetOffset = (uint32_t *)(kHook_Invoke_Enter + 1);
+	// Note that the offset can be positive or negative.
+	int32_t *pInvokeTargetOffset = (int32_t *)(kHook_Invoke_Enter + 1);
 
 	// <call target address> = <call instruction beginning address> + <call instruction's size (5 bytes)> + <32-bit target offset>
 	uintptr_t kHook_Invoke_Target = kHook_Invoke_Enter + 5 + *pInvokeTargetOffset;
@@ -159,8 +161,8 @@ void Hooks_Inject(void)
 	invokeTarget = kHook_Invoke_Target;
 	invokeReturn = kHook_Invoke_Return;
 
-	Log::address("Invoke Enter: ", kHook_Invoke_Enter);
-	Log::address("Invoke Target: ", kHook_Invoke_Target);
+	Log::address("Invoke Enter: ", kHook_Invoke_Enter - kSkyrimBaseAddr);
+	Log::address("Invoke Target: ", kHook_Invoke_Target - kSkyrimBaseAddr);
 
 	/***
 	Post Load HOOK - VR Only
