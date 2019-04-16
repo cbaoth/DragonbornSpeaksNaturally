@@ -4,7 +4,7 @@
 #include <io.h>
 #include <fcntl.h>
 
-#define BUFSIZE 4096 
+#define BUFSIZE 4096
 
 HANDLE g_hChildStd_IN_Rd = NULL;
 HANDLE g_hChildStd_IN_Wr = NULL;
@@ -39,9 +39,16 @@ SpeechRecognitionClient::~SpeechRecognitionClient()
 
 void SpeechRecognitionClient::StopDialogue() {
 	WriteLine("STOP_DIALOGUE");
+	this->currentDialogueList.clear();
 }
 
 void SpeechRecognitionClient::StartDialogue(DialogueList list) {
+	// Same as the last dialogue, no need to start recognizing again
+	if (list == this->currentDialogueList) {
+		return;
+	}
+
+	this->currentDialogueList = list;
 	this->currentDialogueId++;
 	this->selectedIndex = -1;
 	std::string command = "START_DIALOGUE|";
@@ -190,7 +197,7 @@ static DWORD WINAPI SpeechRecognitionClientThreadStart(void* ctx) {
 		.append("\\DragonbornSpeaksNaturally.exe")
 		.append(" --encoding UTF-8"); // Let the service set encoding of its stdin/stdout to UTF-8.
                                     // This can avoid non-ASCII characters (such as Chinese characters) garbled.
-	
+
 	Log::info("Starting speech recognition service at ");
 	Log::info(exePath);
 
@@ -210,15 +217,15 @@ static DWORD WINAPI SpeechRecognitionClientThreadStart(void* ctx) {
 	siStartInfo.dwFlags |= STARTF_USESHOWWINDOW;
 
 	bSuccess = CreateProcess(NULL,
-		szCmdline,     // command line 
-		NULL,          // process security attributes 
-		NULL,          // primary thread security attributes 
-		TRUE,          // handles are inherited 
-		0,             // creation flags 
-		NULL,          // use parent's environment 
-		NULL,          // use parent's current directory 
-		&siStartInfo,  // STARTUPINFO pointer 
-		&piProcInfo);  // receives PROCESS_INFORMATION 
+		szCmdline,     // command line
+		NULL,          // process security attributes
+		NULL,          // primary thread security attributes
+		TRUE,          // handles are inherited
+		0,             // creation flags
+		NULL,          // use parent's environment
+		NULL,          // use parent's current directory
+		&siStartInfo,  // STARTUPINFO pointer
+		&piProcInfo);  // receives PROCESS_INFORMATION
 
 	CloseHandle(piProcInfo.hProcess);
 	CloseHandle(piProcInfo.hThread);

@@ -242,7 +242,6 @@ void FavoritesMenuManager::ProcessEquipCommands() {
 			case 3: // Shout
 				formIdAsHex << std::hex << equipItem.TESFormId;
 				client->EnqueueCommand("player.equipshout " + formIdAsHex.str());
-				PlayerControls * controls = PlayerControls::GetSingleton();
 				break;
 			}
 		}

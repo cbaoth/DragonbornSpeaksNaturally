@@ -4,13 +4,28 @@
 #include <vector>
 #include <queue>
 #include <string>
-#include <windows.h> 
+#include <windows.h>
 #include <sstream>
 #include <mutex>
 
 struct DialogueList
 {
 	std::vector<std::string> lines;
+
+	DialogueList() {
+	}
+
+	DialogueList(const DialogueList &r) {
+		lines = r.lines;
+	}
+
+	void clear() {
+		lines.clear();
+	}
+
+	bool operator==(const DialogueList &r) {
+		return r.lines == lines;
+	}
 };
 
 class SpeechRecognitionClient
@@ -38,6 +53,7 @@ private:
 	HANDLE stdOutRd;
 	int selectedIndex = -1;
 	int currentDialogueId = 0;
+	DialogueList currentDialogueList;
 	std::mutex queueLock;
 	std::string workingLine;
 	void EnqueueEquip(std::string equip);
