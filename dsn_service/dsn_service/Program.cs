@@ -40,8 +40,8 @@ namespace DSN {
                     SkyrimInterop skyrimInterop = new SkyrimInterop(config, consoleInput);
                     ExternalInterop externalInterop = new ExternalInterop(config, skyrimInterop);
 
-                    skyrimInterop.Start();
                     externalInterop.Start();
+                    skyrimInterop.Start();
 
                     // skyrimThread will terminate when Skyrim terminated (stdin closed) or config file updated
                     skyrimInterop.Join();
@@ -51,6 +51,7 @@ namespace DSN {
                     if (!reloadConfigFile)
                     {
                         // Cleanup threads
+                        config.Stop();
                         externalInterop.Stop();
                         skyrimInterop.Stop();
                     }

@@ -53,6 +53,8 @@ namespace DSN {
         }
 
         public void Stop() {
+            config.Stop();
+
             // Notify threads to exit
             consoleInput.WriteLine(null);
             commandQueue.Add(null);
@@ -75,6 +77,7 @@ namespace DSN {
 
                 // Thread exit signal
                 if (command == null) {
+                    config.Stop();
                     break;
                 }
 

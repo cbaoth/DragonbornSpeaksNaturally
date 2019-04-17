@@ -80,7 +80,9 @@ namespace DSN {
         }
 
         public void Stop() {
+            config.Stop();
             StopRecognition();
+            deviceEnum.UnregisterEndpointNotificationCallback(this);
         }
 
         private void RestartRecognition() {

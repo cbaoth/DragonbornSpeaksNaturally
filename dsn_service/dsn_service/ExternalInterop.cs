@@ -35,6 +35,8 @@ namespace DSN {
         }
 
         public void Stop() {
+            config.Stop();
+
             if (batchDirWatcher != null) {
                 batchDirWatcher.EnableRaisingEvents = false;
             }
@@ -102,14 +104,14 @@ namespace DSN {
                 (e.ChangeType == WatcherChangeTypes.Changed || e.ChangeType == WatcherChangeTypes.Created))
             {
                 string filename = e.Name.ToLower();
-                if (filename.Equals(configFileName))
-                {
-                    Trace.TraceInformation("Config file {0} changed", filename);
+                if (filename.Equals(configFileName)) {
+                    isConfigFileChanged = true;
+                    Trace.TraceInformation("Config file {0} changed, reload in 3s", filename);
 
                     // Wait for the configuration file to be saved
-                    Thread.Sleep(1000);
+                    Thread.Sleep(3000);
 
-                    isConfigFileChanged = true;
+                    config.Stop();
                     Stop();
                     skyrimInterop.Stop();
                 }

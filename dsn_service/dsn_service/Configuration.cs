@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DSN {
@@ -19,9 +20,9 @@ namespace DSN {
             ""
         };
 
-        // Can only be changed from true to false,
+        // Can only be changed from 1 to 0,
         // used to coordinate other threads to stop.
-        private bool running = true;
+        private int running = 1;
 
         private string iniFilePath = null;
 
@@ -45,11 +46,11 @@ namespace DSN {
         }
 
         public void Stop() {
-            running = false;
+            Interlocked.Exchange(ref running, 0);
         }
 
         public bool IsRunning() {
-            return running;
+            return Interlocked.CompareExchange(ref running, 1, 1) == 1;
         }
 
         public string GetIniFilePath() {
