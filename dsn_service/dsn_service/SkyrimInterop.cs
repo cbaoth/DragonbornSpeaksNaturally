@@ -56,7 +56,7 @@ namespace DSN {
             // Notify threads to exit
             consoleInput.WriteLine(null);
             commandQueue.Add(null);
-            
+
             recognizer.Stop();
         }
 
@@ -93,6 +93,7 @@ namespace DSN {
 
                     // input will be null when Skyrim terminated (stdin closed)
                     if (input == null) {
+                        config.Stop();
                         break;
                     }
 
@@ -133,8 +134,9 @@ namespace DSN {
             lock (dialogueLock) {
                 if (currentDialogue != null) {
                     int idx = currentDialogue.GetLineIndex(result.Grammar);
-                    if (idx != -1)
+                    if (idx != -1) {
                         SubmitCommand("DIALOGUE|" + currentDialogue.id + "|" + idx);
+                    }
                 } else {
                     string command = favoritesList.GetCommandForResult(result);
                     if(command != null) {

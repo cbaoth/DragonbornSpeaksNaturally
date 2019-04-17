@@ -11,6 +11,9 @@ namespace DSN {
 
         private Configuration config;
 
+        public long id { get; private set; }
+        private Dictionary<Grammar, int> grammarToIndex = new Dictionary<Grammar, int>();
+
         public static DialogueList Parse(string input, Configuration config) {
             string[] tokens = input.Split('|');
             long id = long.Parse(tokens[0]);
@@ -20,9 +23,6 @@ namespace DSN {
             }
             return new DialogueList(id, lines, config);
         }
-
-        public long id { get; private set; }
-        private Dictionary<Grammar, int> grammarToIndex = new Dictionary<Grammar, int>();
 
         private DialogueList(long id, List<string> lines, Configuration config) {
             this.id = id;

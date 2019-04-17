@@ -19,12 +19,18 @@ namespace DSN {
             ""
         };
 
+        // Can only be changed from true to false,
+        // used to coordinate other threads to stop.
+        private bool running = true;
+
         private string iniFilePath = null;
 
         private IniData global = null;
         private IniData local = null;
         private IniData merged = null;
         private List<string> goodbyePhrases = null;
+        private List<string> pausePhrases = null;
+        private List<string> resumePhrases = null;
         private CommandList consoleCommandList = null;
 
         public Configuration() {
@@ -38,6 +44,14 @@ namespace DSN {
             merged.Merge(local);
         }
 
+        public void Stop() {
+            running = false;
+        }
+
+        public bool IsRunning() {
+            return running;
+        }
+
         public string GetIniFilePath() {
             return iniFilePath;
         }
@@ -49,24 +63,41 @@ namespace DSN {
             return val;
         }
 
+        private List<string> getPhrases(string key) {
+            List<string> phrases = new List<string>();
+            string phrasesStr = merged["Dialogue"][key];
+            if (phrasesStr != null) {
+                phrases.AddRange(phrasesStr.Split(';'));
+                phrases.RemoveAll((str) => str == null || str.Trim() == "");
+            }
+            return phrases;
+        }
+
         public List<string> GetGoodbyePhrases() {
             if (goodbyePhrases == null) {
-                goodbyePhrases = new List<string>();
-
-                string phrases = merged["Dialogue"]["goodbyePhrases"];
-                if (phrases != null) {
-                    goodbyePhrases.AddRange(phrases.Split(';'));
-                    goodbyePhrases.RemoveAll((str) => str == null || str.Trim() == "");
-                }
+                goodbyePhrases = getPhrases("goodbyePhrases");
             }
-
             return goodbyePhrases;
+        }
+
+        public List<string> GetPausePhrases() {
+            if (pausePhrases == null) {
+                pausePhrases = getPhrases("pausePhrases");
+            }
+            return pausePhrases;
+        }
+
+        public List<string> GetResumePhrases() {
+            if (resumePhrases == null) {
+                resumePhrases = getPhrases("resumePhrases");
+            }
+            return resumePhrases;
         }
 
         public CommandList GetConsoleCommandList() {
             if (consoleCommandList == null) {
                 consoleCommandList = CommandList.FromIniSection(merged, "ConsoleCommands");
-                
+
                 consoleCommandList.PrintToTrace();
             }
 
@@ -75,7 +106,6 @@ namespace DSN {
 
         private void loadGlobal() {
             global = new IniData();
-            // global["SpeechRecognition"]["Locale"] = "en-US";
         }
 
         private void loadLocal() {
