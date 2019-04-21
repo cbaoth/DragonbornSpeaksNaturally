@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Speech.Recognition;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,6 +14,7 @@ namespace DSN {
 
     class Configuration {
         private readonly string CONFIG_FILE_NAME = "DragonbornSpeaksNaturally.ini";
+        private static readonly SubsetMatchingMode DEFAULT_GRAMMAR_MATCHING_MODE = SubsetMatchingMode.OrderedSubsetContentRequired;
 
         // NOTE: Relative to SkyrimVR.exe
         private readonly string[] SEARCH_DIRECTORIES = {
@@ -29,10 +31,13 @@ namespace DSN {
         private IniData global = null;
         private IniData local = null;
         private IniData merged = null;
+
         private List<string> goodbyePhrases = null;
         private List<string> pausePhrases = null;
         private List<string> resumePhrases = null;
         private CommandList consoleCommandList = null;
+        private bool enableDialogueSubsetMatching = true;
+        private SubsetMatchingMode configuredMatchingMode = DEFAULT_GRAMMAR_MATCHING_MODE;
 
         public Configuration() {
             iniFilePath = resolveFilePath(CONFIG_FILE_NAME);
@@ -43,6 +48,28 @@ namespace DSN {
             merged = new IniData();
             merged.Merge(global);
             merged.Merge(local);
+
+            string matchingMode = Get("Dialogue", "SubsetMatchingMode", Enum.GetName(typeof(SubsetMatchingMode), DEFAULT_GRAMMAR_MATCHING_MODE));
+            try {
+                if (matchingMode.ToLower() == "none") {
+                    enableDialogueSubsetMatching = false;
+                    Trace.TraceInformation("Dialogue SubsetMatchingMode Disabled");
+                } else {
+                    configuredMatchingMode = (SubsetMatchingMode)Enum.Parse(typeof(SubsetMatchingMode), matchingMode, true);
+                    Trace.TraceInformation("Set Dialogue SubsetMatchingMode to {0}", configuredMatchingMode);
+                }
+            } catch (Exception ex) {
+                Trace.TraceError("Failed to parse SubsetMatchingMode from ini file, falling back to default");
+                Trace.TraceError(ex.ToString());
+                configuredMatchingMode = DEFAULT_GRAMMAR_MATCHING_MODE;
+            }
+
+            goodbyePhrases = getPhrases("Dialogue", "goodbyePhrases");
+            pausePhrases = getPhrases("SpeechRecognition", "pausePhrases");
+            resumePhrases = getPhrases("SpeechRecognition", "resumePhrases");
+
+            consoleCommandList = CommandList.FromIniSection(merged, "ConsoleCommands");
+            consoleCommandList.PrintToTrace();
         }
 
         public void Stop() {
@@ -64,9 +91,9 @@ namespace DSN {
             return val;
         }
 
-        private List<string> getPhrases(string key) {
+        private List<string> getPhrases(string section, string key) {
             List<string> phrases = new List<string>();
-            string phrasesStr = merged["Dialogue"][key];
+            string phrasesStr = merged[section][key];
             if (phrasesStr != null) {
                 phrases.AddRange(phrasesStr.Split(';'));
                 phrases.RemoveAll((str) => str == null || str.Trim() == "");
@@ -75,34 +102,27 @@ namespace DSN {
         }
 
         public List<string> GetGoodbyePhrases() {
-            if (goodbyePhrases == null) {
-                goodbyePhrases = getPhrases("goodbyePhrases");
-            }
             return goodbyePhrases;
         }
 
         public List<string> GetPausePhrases() {
-            if (pausePhrases == null) {
-                pausePhrases = getPhrases("pausePhrases");
-            }
             return pausePhrases;
         }
 
         public List<string> GetResumePhrases() {
-            if (resumePhrases == null) {
-                resumePhrases = getPhrases("resumePhrases");
-            }
             return resumePhrases;
         }
 
         public CommandList GetConsoleCommandList() {
-            if (consoleCommandList == null) {
-                consoleCommandList = CommandList.FromIniSection(merged, "ConsoleCommands");
-
-                consoleCommandList.PrintToTrace();
-            }
-
             return consoleCommandList;
+        }
+
+        public bool IsSubsetMatchingEnabled() {
+            return enableDialogueSubsetMatching;
+        }
+
+        public SubsetMatchingMode getConfiguredMatchingMode() {
+            return configuredMatchingMode;
         }
 
         private void loadGlobal() {

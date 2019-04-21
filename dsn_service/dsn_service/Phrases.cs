@@ -8,12 +8,9 @@ using System.Threading.Tasks;
 namespace DSN {
     class Phrases {
         public static string normalize(string phrase) {
-            phrase = Regex.Replace(phrase, @"\(.*?\)|\{.*?\}|\|.*?\||\[.*?\]|\b.*\:\s", string.Empty);
-            phrase = Regex.Replace(phrase, "[\"']", string.Empty);
-            phrase = phrase.Replace('-', ' ');
-            RegexOptions options = RegexOptions.None;
-            Regex regex = new Regex("[ ]{2,}", options);
-            phrase = regex.Replace(phrase, " ");
+            // Double quotes are not allowed in the speech recognition engine
+            phrase = phrase.Replace('"', ' ');
+            phrase = Regex.Replace(phrase, @"\s+", " ");
             return phrase.Trim();
         }
     }

@@ -34,11 +34,11 @@ namespace DSN {
             leftHandSuffix = config.Get("Favorites", "equipLeftSuffix", "left");
             rightHandSuffix = config.Get("Favorites", "equipRightSuffix", "right");
             bothHandsSuffix = config.Get("Favorites", "equipBothSuffix", "both");
-            
+
             mainHand = config.Get("Favorites", "mainHand", "none");
 
             // Determine the main hand used when user didn't ask for a specific hand.
-            // 
+            //
             // If an initializer is used and the key name conflicts (such as bothHandsSuffix == "both"),
             // an System.ArgumentException will be thrown. So assigning values one by one is a safer way.
             var mainHandMap = new Dictionary<string, string>();
@@ -121,7 +121,7 @@ namespace DSN {
             }
             return null;
         }
-        
+
         // Returns a map/dictionary or throws exception when the file cannot be opened/read
         public dynamic LoadItemNameMap(string path)
         {
@@ -145,7 +145,7 @@ namespace DSN {
             }
         }
 
- 
+
 
         public void Update(string input) {
             if(!enabled) {
@@ -153,7 +153,7 @@ namespace DSN {
             }
 
             var firstEquipmentOfType = new Dictionary<string, string> { };
-           
+
             dynamic itemNameMap = LoadItemNameMap();
 
             string equipPrefix = config.Get("Favorites", "equipPhrasePrefix", "equip");
@@ -171,7 +171,7 @@ namespace DSN {
 
                     itemName = MaybeReplaceItemName(itemNameMap, itemName);
 
-                    string phrase = equipPrefix + " " + Phrases.normalize(itemName);
+                    string phrase = Phrases.normalize(equipPrefix + " " + itemName);
                     string command = formId + ";" + itemId + ";" + typeId + ";";
 
                     BuildAndAddGrammar(phrase, command, isSingleHanded);

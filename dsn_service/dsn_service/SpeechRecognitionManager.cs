@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Speech.Recognition;
@@ -51,7 +51,7 @@ namespace DSN {
                     continue;
                 Trace.TraceInformation("Found pause phrase: '{0}'", phrase);
                 try {
-                    Grammar g = new Grammar(new GrammarBuilder(phrase));
+                    Grammar g = new Grammar(new GrammarBuilder(Phrases.normalize(phrase)));
                     pausePhrases.Add(g);
                 } catch (Exception ex) {
                     Trace.TraceError("Failed to create grammar for pause phrase {0} due to exception:\n{1}", phrase, ex.ToString());
@@ -62,7 +62,7 @@ namespace DSN {
                     continue;
                 Trace.TraceInformation("Found resume phrase: '{0}'", phrase);
                 try {
-                    Grammar g = new Grammar(new GrammarBuilder(phrase));
+                    Grammar g = new Grammar(new GrammarBuilder(Phrases.normalize(phrase)));
                     resumePhrases.Add(g);
                 } catch (Exception ex) {
                     Trace.TraceError("Failed to create grammar for resume phrase {0} due to exception:\n{1}", phrase, ex.ToString());
