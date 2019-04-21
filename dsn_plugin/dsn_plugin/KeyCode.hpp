@@ -199,29 +199,29 @@ static UInt32 GetKeyScanCode(std::string key) {
 // Set mouse event when press/release mouse button
 static void _setMouseInput(INPUT &input) {
     if (input.ki.wScan < KEY_SCAN_CODE_MOUSE_EVENT_BEGIN || input.ki.wScan > KEY_SCAN_CODE_MOUSE_EVENT_END) {
-		return;
+        return;
     }
 
-	bool isKeyUp = input.ki.dwFlags & KEYEVENTF_KEYUP;
-	auto &mouseEventMap = isKeyUp ? KEY_CODE_TO_MOUSE_UP_MAP : KEY_CODE_TO_MOUSE_DOWN_MAP;
+    bool isKeyUp = input.ki.dwFlags & KEYEVENTF_KEYUP;
+    auto &mouseEventMap = isKeyUp ? KEY_CODE_TO_MOUSE_UP_MAP : KEY_CODE_TO_MOUSE_DOWN_MAP;
 
-	auto itr = mouseEventMap.find(input.ki.wScan);
-	if (itr == mouseEventMap.end()) {
-		return;
-	}
+    auto itr = mouseEventMap.find(input.ki.wScan);
+    if (itr == mouseEventMap.end()) {
+        return;
+    }
 
-	input.type = INPUT_MOUSE;
-	input.mi.dwFlags = itr->second;
+    input.type = INPUT_MOUSE;
+    input.mi.dwFlags = itr->second;
 
-	if (input.ki.wScan == KEY_SCAN_CODE_MOUSE_WHEEL_UP) {
-		input.mi.mouseData = WHEEL_DELTA;
-	}
-	else if (input.ki.wScan == KEY_SCAN_CODE_MOUSE_WHEEL_DOWN) {
-		input.mi.mouseData = -WHEEL_DELTA;
-	}
-	else if (input.mi.dwFlags == MOUSEEVENTF_XUP || input.mi.dwFlags == MOUSEEVENTF_XDOWN) {
-		input.mi.mouseData = input.ki.wScan - KEY_SCAN_CODE_MOUSE_X_BUTTON_BEGIN;
-	}
+    if (input.ki.wScan == KEY_SCAN_CODE_MOUSE_WHEEL_UP) {
+        input.mi.mouseData = WHEEL_DELTA;
+    }
+    else if (input.ki.wScan == KEY_SCAN_CODE_MOUSE_WHEEL_DOWN) {
+        input.mi.mouseData = -WHEEL_DELTA;
+    }
+    else if (input.mi.dwFlags == MOUSEEVENTF_XUP || input.mi.dwFlags == MOUSEEVENTF_XDOWN) {
+        input.mi.mouseData = input.ki.wScan - KEY_SCAN_CODE_MOUSE_X_BUTTON_BEGIN;
+    }
 }
 
 static void SendKeyDown(UInt32 keycode) {
@@ -231,7 +231,7 @@ static void SendKeyDown(UInt32 keycode) {
     input.ki.dwFlags = KEYEVENTF_SCANCODE;
     input.ki.wScan = keycode;
 
-	_setMouseInput(input);
+    _setMouseInput(input);
 
     SendInput(1, &input, sizeof(INPUT));
     //Log::info("key down: " + std::to_string(*itr));
@@ -244,7 +244,7 @@ static void SendKeyUp(UInt32 keycode) {
     input.ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
     input.ki.wScan = keycode;
 
-	_setMouseInput(input);
+    _setMouseInput(input);
 
     SendInput(1, &input, sizeof(INPUT));
     //Log::info("key up: " + std::to_string(itr->second));
