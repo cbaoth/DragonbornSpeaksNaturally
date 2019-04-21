@@ -20,7 +20,7 @@ namespace DSN {
         private List<Grammar> pausePhrases = new List<Grammar>();
         private List<Grammar> resumePhrases = new List<Grammar>();
 
-        private long recognitionStatus = STATUS_STOPPED; // Need thread safety.
+        private long recognitionStatus = STATUS_WAITING_DEVICE; // Need thread safety.
         private Thread waitingDeviceThread;
 
         private readonly SpeechRecognitionEngine DSN;
@@ -115,13 +115,17 @@ namespace DSN {
             }
 
             lock (dsnLock) {
+                if (!config.IsRunning()) {
+                    return;
+                }
+
                 MMDevice device = deviceEnum.GetDefaultAudioEndpoint(DataFlow.Capture, Role.Console);
                 if (device != null) {
                     currentDeviceId = device.ID;
                 }
 
                 recognitionStatus = STATUS_STOPPED;
-                RestartRecognitionNoLock();
+                RestartRecognition();
                 waitingDeviceThread = null;
             }
         }
@@ -129,21 +133,18 @@ namespace DSN {
         public void Stop() {
             config.Stop();
             StopRecognition();
-            deviceEnum.UnregisterEndpointNotificationCallback(this);
 
-            if (waitingDeviceThread != null) {
-                waitingDeviceThread.Abort();
+            lock (dsnLock) {
+                deviceEnum.UnregisterEndpointNotificationCallback(this);
+
+                if (waitingDeviceThread != null) {
+                    waitingDeviceThread.Abort();
+                }
             }
-        }
-
-        private void RestartRecognitionNoLock() {
-            StartSpeechRecognition(isDialogueMode, grammarProviders);
         }
 
         private void RestartRecognition() {
-            lock (dsnLock) {
-                RestartRecognitionNoLock();
-            }
+            StartSpeechRecognition(isDialogueMode, grammarProviders);
         }
 
         private void DSN_AudioStateChanged(object sender, AudioStateChangedEventArgs e) {
