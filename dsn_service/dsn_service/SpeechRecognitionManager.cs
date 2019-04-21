@@ -13,12 +13,17 @@ namespace DSN {
         private const long STATUS_RECOGNIZING = 1; // in recognizing
         private const long STATUS_WAITING_DEVICE = 2; // waiting for record device
 
+        private const string DEFAULT_PAUSE_AUDIO_FILE = @"C:\Windows\media\Speech Off.wav";
+        private const string DEFAULT_RESUME_AUDIO_FILE = @"C:\Windows\media\Speech On.wav";
+
         public delegate void DialogueLineRecognitionHandler(RecognitionResult result);
         public event DialogueLineRecognitionHandler OnDialogueLineRecognized;
 
         private bool isPaused = false;
         private List<Grammar> pausePhrases = new List<Grammar>();
         private List<Grammar> resumePhrases = new List<Grammar>();
+        private readonly string pauseAudioFile;
+        private readonly string resumeAudioFile;
 
         private long recognitionStatus = STATUS_WAITING_DEVICE; // Need thread safety.
         private Thread waitingDeviceThread;
@@ -48,6 +53,9 @@ namespace DSN {
             logAudioSignalIssues = config.Get("SpeechRecognition", "bLogAudioSignalIssues", "0") == "1";
 
             Trace.TraceInformation("Locale: {0}\nDialogueConfidence: {1}\nCommandConfidence: {2}", locale, dialogueMinimumConfidence, commandMinimumConfidence);
+
+            pauseAudioFile = config.Get("SpeechRecognition", "pauseAudioFile", DEFAULT_PAUSE_AUDIO_FILE).Trim();
+            resumeAudioFile = config.Get("SpeechRecognition", "resumeAudioFile", DEFAULT_RESUME_AUDIO_FILE).Trim();
 
             List<string> pausePhraseStrings = config.GetPausePhrases();
             List<string> resumePhraseStrings = config.GetResumePhrases();
@@ -238,10 +246,13 @@ namespace DSN {
                         Trace.TraceInformation("****** Recognition {0} ******", isPaused ? "Paused" : "Resumed");
 
                         // Play a tone for notification
-                        if (isPaused) {
-                            System.Media.SystemSounds.Hand.Play();
-                        } else {
-                            System.Media.SystemSounds.Beep.Play();
+                        string file = isPaused ? pauseAudioFile : resumeAudioFile;
+                        if (file.Count() != 0) {
+                            try {
+                                new System.Media.SoundPlayer(file).Play();
+                            } catch (Exception ex) {
+                                Trace.TraceError("Play {0} failed with exception:\n{1}", file, ex.ToString());
+                            }
                         }
 
                         RestartRecognition();
