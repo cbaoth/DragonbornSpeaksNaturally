@@ -9,6 +9,9 @@ using NAudio.CoreAudioApi;
 
 namespace DSN {
     class SpeechRecognitionManager : NAudio.CoreAudioApi.Interfaces.IMMNotificationClient {
+        private const long STATUS_STOPPED = 0; // not in recognizing
+        private const long STATUS_RECOGNIZING = 1; // in recognizing
+        private const long STATUS_WAITING_DEVICE = 2; // waiting for record device
 
         public delegate void DialogueLineRecognitionHandler(RecognitionResult result);
         public event DialogueLineRecognitionHandler OnDialogueLineRecognized;
@@ -17,7 +20,9 @@ namespace DSN {
         private List<Grammar> pausePhrases = new List<Grammar>();
         private List<Grammar> resumePhrases = new List<Grammar>();
 
-        private bool isRecognizing = false;
+        private long recognitionStatus = STATUS_STOPPED; // Need thread safety.
+        private Thread waitingDeviceThread;
+
         private readonly SpeechRecognitionEngine DSN;
         private readonly Object dsnLock = new Object();
 
@@ -77,17 +82,67 @@ namespace DSN {
             this.DSN.SpeechRecognized += DSN_SpeechRecognized;
             this.DSN.SpeechRecognitionRejected += DSN_SpeechRecognitionRejected;
             this.deviceEnum.RegisterEndpointNotificationCallback(this);
+
+            WaitRecordingDeviceNonBlocking();
+        }
+
+        private void WaitRecordingDeviceNonBlocking() {
+            // Waiting recording device in a new thread to avoid blocking
+            waitingDeviceThread = new Thread(DoWaitRecordingDevice);
+            waitingDeviceThread.Start();
+        }
+
+        private void DoWaitRecordingDevice() {
+            lock (dsnLock) {
+                StopRecognition();
+                recognitionStatus = STATUS_WAITING_DEVICE;
+            }
+
+            // Select input device
+            try {
+                this.DSN.SetInputToDefaultAudioDevice();
+            } catch {
+                Trace.TraceInformation("Waiting for recording device...");
+                while (config.IsRunning()) {
+                    try {
+                        this.DSN.SetInputToDefaultAudioDevice();
+                        Trace.TraceInformation("Recording device is ready.");
+                        break;
+                    } catch {
+                        Thread.Sleep(500);
+                    }
+                }
+            }
+
+            lock (dsnLock) {
+                MMDevice device = deviceEnum.GetDefaultAudioEndpoint(DataFlow.Capture, Role.Console);
+                if (device != null) {
+                    currentDeviceId = device.ID;
+                }
+
+                recognitionStatus = STATUS_STOPPED;
+                RestartRecognitionNoLock();
+                waitingDeviceThread = null;
+            }
         }
 
         public void Stop() {
             config.Stop();
             StopRecognition();
             deviceEnum.UnregisterEndpointNotificationCallback(this);
+
+            if (waitingDeviceThread != null) {
+                waitingDeviceThread.Abort();
+            }
+        }
+
+        private void RestartRecognitionNoLock() {
+            StartSpeechRecognition(isDialogueMode, grammarProviders);
         }
 
         private void RestartRecognition() {
             lock (dsnLock) {
-                StartSpeechRecognition(isDialogueMode, grammarProviders);
+                RestartRecognitionNoLock();
             }
         }
 
@@ -106,9 +161,9 @@ namespace DSN {
         private void StopRecognition() {
             lock (dsnLock) {
                 try {
-                    if (isRecognizing) {
+                    if (recognitionStatus == STATUS_RECOGNIZING) {
                         this.DSN.RecognizeAsyncCancel();
-                        isRecognizing = false;
+                        recognitionStatus = STATUS_STOPPED;
                     }
                 } catch (Exception e) {
                     Trace.TraceError("Failed to stop recognition due to exception");
@@ -123,34 +178,13 @@ namespace DSN {
                     this.isDialogueMode = isDialogueMode;
                     this.grammarProviders = grammarProviders;
 
-                    StopRecognition(); // Cancel previous recognition
-
-                    // Select input device
-                    try {
-                        this.DSN.SetInputToDefaultAudioDevice();
-                        MMDevice device = deviceEnum.GetDefaultAudioEndpoint(DataFlow.Capture, Role.Console);
-                        if (device != null) {
-                            currentDeviceId = device.ID;
-                        }
-                    } catch {
-                        Trace.TraceInformation("Waiting for recording device...");
-
-                        while (config.IsRunning()) {
-                            try {
-                                this.DSN.SetInputToDefaultAudioDevice();
-                                MMDevice device = deviceEnum.GetDefaultAudioEndpoint(DataFlow.Capture, Role.Console);
-                                if (device != null) {
-                                    currentDeviceId = device.ID;
-                                }
-
-                                Trace.TraceInformation("Recording device is ready.");
-                                break;
-
-                            } catch {
-                                Thread.Sleep(500);
-                            }
-                        }
+                    if (recognitionStatus == STATUS_WAITING_DEVICE) {
+                        // Avoid blocking and the program cannot quit when Skyrim is terminated
+                        Trace.TraceInformation("Recording device is not ready");
+                        return;
                     }
+
+                    StopRecognition(); // Cancel previous recognition
 
                     List<Grammar> allGrammars = new List<Grammar>();
                     if (isPaused) {
@@ -165,7 +199,7 @@ namespace DSN {
                     if (allGrammars.Count > 0) {
                         SetGrammar(allGrammars);
                         this.DSN.RecognizeAsync(RecognizeMode.Multiple);
-                        isRecognizing = true;
+                        recognitionStatus = STATUS_RECOGNIZING;
 
                         Trace.TraceInformation(
                             "Recognition {0}: {1} mode, {2} phrases",
@@ -236,7 +270,7 @@ namespace DSN {
                 if (defaultDeviceId != currentDeviceId) {
                     Trace.TraceInformation("****** Default audio device changed ******");
                     currentDeviceId = defaultDeviceId;
-                    RestartRecognition();
+                    WaitRecordingDeviceNonBlocking();
                 }
             }
         }
