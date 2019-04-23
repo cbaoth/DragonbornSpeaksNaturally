@@ -103,7 +103,7 @@ add_library(svr_skse64_common STATIC ${SVR_SKSE64_COMMON_SRC})
 add_library(svr_skse64        STATIC ${SVR_SKSE64_SRC})
 
 target_include_directories(svr_common PUBLIC svr/ svr/xbyak/)
-target_compile_options(svr_common PUBLIC /FI"common/IPrefix.h")
+target_compile_options(svr_common PUBLIC /FI"string" /FI"common/IPrefix.h")
 target_compile_definitions(svr_skse64 PRIVATE
     SKSE64_EXPORTS
     RUNTIME
@@ -127,7 +127,7 @@ add_library(sse_skse64_common STATIC ${SSE_SKSE64_COMMON_SRC})
 add_library(sse_skse64        STATIC ${SSE_SKSE64_SRC})
 
 target_include_directories(sse_common PUBLIC sse/ sse/xbyak/)
-target_compile_options(sse_common PUBLIC /FI"common/IPrefix.h")
+target_compile_options(sse_common PUBLIC /FI"string" /FI"common/IPrefix.h")
 target_compile_definitions(sse_skse64 PRIVATE
     SKSE64_EXPORTS
     RUNTIME
