@@ -57,7 +57,6 @@ set(VS_DOTNET_REFERENCES
     System.Core
     System.Data
     System.Data.DataSetExtensions
-    System.Net.Http
     System.Speech
     System.Web.Extensions
     System.Xml
