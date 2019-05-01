@@ -12,7 +12,13 @@
         <group name="Skyrim Edition:" type="SelectExactlyOne">
           <plugins order="Explicit">
             <plugin name="Skyrim VR">
-              <description>This plugin is compatible with SkyrimVR 1.4.15.0.</description>
+              <description><![CDATA[This plugin is compatible and only compatible with SkyrimVR 1.4.15.0.
+
+To make the plugin working, you must manually install xSHADOWMANx's Dll Loader to the game root directory.
+
+You cannot install the loader via any MOD manager (But DSN can be installed via MOD Manager).
+
+You can find the loader here: https://www.nexusmods.com/skyrimspecialedition/mods/3619]]></description>
               <files>
                 <folder source="SkyrimVR\Data" destination="" priority="0"/>
                 <file source="fomod/DSN-installed.md" destination="SKSE/DSN/DSN-for-SkyrimVR-installed.md" priority="0"/>
@@ -33,7 +39,13 @@
               </typeDescriptor>
             </plugin>
             <plugin name="Skyrim Special Edition">
-              <description>This plugin is compatible with Skyrim Special Edition 1.5.73.0.</description>
+              <description><![CDATA[This plugin is compatible and only compatible with Skyrim Special Edition 1.5.73.0.
+
+To make the plugin working, you must manually install xSHADOWMANx's Dll Loader to the game root directory.
+
+You cannot install the loader via any MOD manager (But DSN can be installed via MOD Manager).
+
+You can find the loader here: https://www.nexusmods.com/skyrimspecialedition/mods/3619]]></description>
               <files>
                 <folder source="SkyrimSE\Data" destination="" priority="0"/>
                 <file source="fomod/DSN-installed.md" destination="SKSE/DSN/DSN-for-SkyrimSE-installed.md" priority="0"/>
