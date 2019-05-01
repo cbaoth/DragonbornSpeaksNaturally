@@ -29,7 +29,9 @@ if (PACKAGE)
 
     set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/package_tmp)
     install(
-        DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/fomod
+        DIRECTORY
+            ${CMAKE_CURRENT_SOURCE_DIR}/docs
+            ${CMAKE_CURRENT_SOURCE_DIR}/fomod
         DESTINATION .
     )
     install(

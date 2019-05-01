@@ -1,25 +1,60 @@
-<!-- Created with FOMOD Creation Tool 1.7.0.37 [http://www.nexusmods.com/fallout4/mods/6821] -->
-<!-- FOMod Document [https://media.readthedocs.org/pdf/fomod-docs/latest/fomod-docs.pdf] -->
+<!-- FOMod Creation Tool [http://www.nexusmods.com/fallout4/mods/6821] -->
+<!-- FOMod Quick Guide [https://media.readthedocs.org/pdf/fomod-docs/latest/fomod-docs.pdf] -->
+<!-- FOMod Reference Manual [https://fomod-designer.readthedocs.io/en/stable/] -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://qconsulting.ca/fo3/ModConfig5.0.xsd">
-	<moduleName>Dragonborn Speaks Naturally</moduleName>
-	<conditionalFileInstalls>
-		<patterns>
-			<pattern>
-				<dependencies operator="And">
-					<fileDependency file="SkyrimVR.esm" state="Active"/>
-				</dependencies>
-				<files>
-					<folder source="SkyrimVR\Data\Plugins" destination="Plugins" priority="0" />
-				</files>
-			</pattern>
-			<pattern>
-				<dependencies operator="And">
-					<fileDependency file="SkyrimVR.esm" state="Missing"/>
-				</dependencies>
-				<files>
-					<folder source="SkyrimSE\Data\Plugins" destination="Plugins" priority="0" />
-				</files>
-			</pattern>
-		</patterns>
-	</conditionalFileInstalls>
+  <moduleName>Dragonborn Speaks Naturally</moduleName>
+  <requiredInstallFiles>
+    <folder source="docs" destination="Docs" priority="0"/>
+  </requiredInstallFiles>
+  <installSteps order="Explicit">
+    <installStep name="Choose Option">
+      <optionalFileGroups order="Explicit">
+        <group name="Skyrim Edition:" type="SelectExactlyOne">
+          <plugins order="Explicit">
+            <plugin name="Skyrim VR">
+              <description>This plugin is compatible with SkyrimVR 1.4.15.0.</description>
+              <files>
+                <folder source="SkyrimVR\Data" destination="" priority="0"/>
+                <file source="fomod/DSN-installed.md" destination="SKSE/DSN/DSN-for-SkyrimVR-installed.md" priority="0"/>
+              </files>
+              <typeDescriptor>
+                <dependencyType>
+                  <defaultType name="Optional"/>
+                  <patterns>
+                    <pattern>
+                      <dependencies operator="Or">
+                        <fileDependency file="SkyrimVR.esp" state="Active"/>
+                        <fileDependency file="SkyrimVR.esp" state="Inactive"/>
+                      </dependencies>
+                      <type name="Recommended"/>
+                    </pattern>
+                  </patterns>
+                </dependencyType>
+              </typeDescriptor>
+            </plugin>
+            <plugin name="Skyrim Special Edition">
+              <description>This plugin is compatible with Skyrim Special Edition 1.5.73.0.</description>
+              <files>
+                <folder source="SkyrimSE\Data" destination="" priority="0"/>
+                <file source="fomod/DSN-installed.md" destination="SKSE/DSN/DSN-for-SkyrimSE-installed.md" priority="0"/>
+              </files>
+              <typeDescriptor>
+                <dependencyType>
+                  <defaultType name="Optional"/>
+                  <patterns>
+                    <pattern>
+                      <dependencies operator="Or">
+                        <fileDependency file="SkyrimVR.esm" state="Missing"/>
+                      </dependencies>
+                      <type name="Recommended"/>
+                    </pattern>
+                  </patterns>
+                </dependencyType>
+              </typeDescriptor>
+            </plugin>
+          </plugins>
+        </group>
+      </optionalFileGroups>
+    </installStep>
+  </installSteps>
 </config>
