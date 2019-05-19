@@ -67,35 +67,25 @@ int SpeechRecognitionClient::ReadSelectedIndex() {
 }
 
 std::string SpeechRecognitionClient::PopCommand() {
+	std::lock_guard<std::mutex> scopeLock(queueLock);
 	if (queuedCommands.empty())
 	{
 		return "";
 	}
-	else
-	{
-		queueLock.lock();
-		std::string retcommand = queuedCommands.front();
-		queuedCommands.pop();
-		queueLock.unlock();
-
-		return retcommand;
-	}
+	std::string retcommand = queuedCommands.front();
+	queuedCommands.pop();
+	return retcommand;
 }
 
 std::string SpeechRecognitionClient::PopEquip() {
+	std::lock_guard<std::mutex> scopeLock(queueLock);
 	if (queuedEquips.empty())
 	{
 		return "";
 	}
-	else
-	{
-		queueLock.lock();
-		std::string retcommand = queuedEquips.front();
-		queuedEquips.pop();
-		queueLock.unlock();
-
-		return retcommand;
-	}
+	std::string retcommand = queuedEquips.front();
+	queuedEquips.pop();
+	return retcommand;
 }
 
 void SpeechRecognitionClient::EnqueueCommand(std::string command) {
@@ -104,15 +94,13 @@ void SpeechRecognitionClient::EnqueueCommand(std::string command) {
 	if (ConsoleCommandRunner::TryRunCustomCommand(command)) {
 		return;
 	}
-	queueLock.lock();
+	std::lock_guard<std::mutex> scopeLock(queueLock);
 	queuedCommands.push(command);
-	queueLock.unlock();
 }
 
 void SpeechRecognitionClient::EnqueueEquip(std::string equip) {
-	queueLock.lock();
+	std::lock_guard<std::mutex> scopeLock(queueLock);
 	queuedEquips.push(equip);
-	queueLock.unlock();
 }
 
 void SpeechRecognitionClient::AwaitResponses() {
