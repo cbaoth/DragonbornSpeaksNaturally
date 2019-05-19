@@ -7,14 +7,8 @@ using System.Threading.Tasks;
 
 namespace DSN {
     class Log {
-
-        private static readonly string ERROR_LOG_FILE = "DragonbornSpeaksNaturally.log";
-
         public static void Initialize() {
-            string logFilePath = System.Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            logFilePath += "\\DragonbornSpeaksNaturally";
-            System.IO.Directory.CreateDirectory(logFilePath);
-            logFilePath += "\\"+ERROR_LOG_FILE;
+            string logFilePath = Configuration.MY_DOCUMENT_DSN_DIR + Configuration.ERROR_LOG_FILE;
             try {
                 // The compiler constant TRACE needs to be defined, otherwise logs will not be output to the file.
                 var listener = new TextWriterTraceListener(logFilePath);

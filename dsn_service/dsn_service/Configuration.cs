@@ -13,13 +13,17 @@ using System.Threading.Tasks;
 namespace DSN {
 
     class Configuration {
+        public static readonly string MY_DOCUMENT_DSN_DIR = System.Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\DragonbornSpeaksNaturally\\";
+        public static readonly string ERROR_LOG_FILE = "DragonbornSpeaksNaturally.log";
+
         private readonly string CONFIG_FILE_NAME = "DragonbornSpeaksNaturally.ini";
         private static readonly SubsetMatchingMode DEFAULT_GRAMMAR_MATCHING_MODE = SubsetMatchingMode.OrderedSubsetContentRequired;
 
         // NOTE: Relative to SkyrimVR.exe
         private readonly string[] SEARCH_DIRECTORIES = {
             "Data\\Plugins\\Sumwunn\\",
-            ""
+            "",
+            MY_DOCUMENT_DSN_DIR
         };
 
         // Can only be changed from 1 to 0,
@@ -138,6 +142,7 @@ namespace DSN {
         public string resolveFilePath(string filename) {
             foreach (string directory in SEARCH_DIRECTORIES) {
                 string filepath = directory + filename;
+                Trace.TraceInformation("filepath: " + filepath);
                 if (File.Exists(filepath)) {
                     return Path.GetFullPath(filepath); ;
                 }
