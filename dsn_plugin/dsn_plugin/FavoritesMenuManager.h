@@ -34,6 +34,7 @@ class FavoritesMenuManager
 public:
 	static FavoritesMenuManager* getInstance();
 	void RefreshFavorites();
+	void ClearFavorites();
 	void ProcessEquipCommands();
 private:
 	FavoritesMenuManager();

@@ -1,21 +1,21 @@
-#include "Hooks.h"
-#include <string.h>
-#include "Log.h"
+
+#include <cstring>
+#include <cinttypes>
 #include "common/IPrefix.h"
 #include "skse64_common/SafeWrite.h"
 #include "skse64/ScaleformAPI.h"
 #include "skse64/ScaleformMovie.h"
 #include "skse64/ScaleformValue.h"
+#include "skse64/GameEvents.h"
 #include "skse64/GameInput.h"
 #include "skse64_common/BranchTrampoline.h"
 #include "xbyak.h"
 #include "SkyrimType.h"
+#include "Hooks.h"
+#include "Log.h"
 #include "ConsoleCommandRunner.h"
 #include "FavoritesMenuManager.h"
 
-class RunCommandSink;
-
-static RunCommandSink *runCommandSink = NULL;
 static GFxMovieView* dialogueMenu = NULL;
 static int desiredTopicIndex = 1;
 static int numTopics = 0;
@@ -76,11 +76,9 @@ static void __cdecl Hook_Loop()
 			Log::info("run command: " + command);
 		}
 
-		if (g_SkyrimType == VR) {
 			FavoritesMenuManager::getInstance()->ProcessEquipCommands();
 		}
 	}
-}
 
 class RunCommandSink : public BSTEventSink<InputEvent> {
 	EventResult ReceiveEvent(InputEvent ** evnArr, InputEventDispatcher * dispatcher) override {
@@ -89,18 +87,51 @@ class RunCommandSink : public BSTEventSink<InputEvent> {
 	}
 };
 
+class ObjectLoadedSink : public BSTEventSink<TESObjectLoadedEvent> {
+	EventResult ReceiveEvent(TESObjectLoadedEvent* evn, EventDispatcher<TESObjectLoadedEvent>* dispatcher) override {
+		if (evn != nullptr && evn->formId==0x00000014 /*player*/) {
+			if (evn->loaded) {
+				FavoritesMenuManager::getInstance()->RefreshFavorites();
+				Log::info("Favorites Menu Voice-Equip Initialized");
+			}
+			else {
+				FavoritesMenuManager::getInstance()->ClearFavorites();
+				Log::info("Favorites Menu Voice-Equip Disabled");
+			}
+		}
+		return kEvent_Continue;
+	}
+};
+
+
+class PostLoadSink : public BSTEventSink<void> {
+public:
+	EventResult ReceiveEvent(void* evn, EventDispatcher<void>* dispatcher) override {
+		FavoritesMenuManager::getInstance()->RefreshFavorites();
+		Log::info("Favorites Menu Voice-Equip Updated");
+		return kEvent_Continue;
+	}
+};
+
 static void __cdecl Hook_Invoke(GFxMovieView* movie, char * gfxMethod, GFxValue* argv, UInt32 argc)
 {
+#ifndef IS_VR
 	static bool inited = false;
 	if (!inited && g_SkyrimType == SE) {
-		runCommandSink = new RunCommandSink;
 		// Currently in the source code directory is the latest version of SKSE64 instead of SKSEVR,
 		// so we can call GetSingleton() directly instead of use a RelocAddr.
-		auto inputEventDispatcher = InputEventDispatcher::GetSingleton();
-		inputEventDispatcher->AddEventSink(runCommandSink);
+		static RunCommandSink runCommandSink;
+		static ObjectLoadedSink objectLoadedSink;
+		static PostLoadSink postLoadSink;
+
+		InputEventDispatcher::GetSingleton()->AddEventSink(&runCommandSink);
+		GetEventDispatcherList()->objectLoadedDispatcher.AddEventSink(&objectLoadedSink);
+		GetEventDispatcherList()->unk6E0.AddEventSink(&postLoadSink);
+
 		inited = true;
 		Log::info("RunCommandSink Initialized");
 	}
+#endif
 
 	if (argc >= 1)
 	{
@@ -125,7 +156,7 @@ static void __cdecl Hook_Invoke(GFxMovieView* movie, char * gfxMethod, GFxValue*
 				dialogueList.lines = lines;
 				SpeechRecognitionClient::getInstance()->StartDialogue(dialogueList);
 			}
-			else if (g_SkyrimType == VR && strcmp(command, "UpdatePlayerInfo") == 0)
+			else if (strcmp(command, "UpdatePlayerInfo") == 0)
 			{
 				FavoritesMenuManager::getInstance()->RefreshFavorites();
 			}

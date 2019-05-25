@@ -179,6 +179,16 @@ void FavoritesMenuManager::RefreshFavorites() {
 	}
 }
 
+void FavoritesMenuManager::ClearFavorites() {
+	// Clear current favorites
+	favorites.clear();
+	std::string command = "FAVORITES";
+	if (lastFavoritesCommand != command) {
+		SpeechRecognitionClient::getInstance()->WriteLine(command);
+		lastFavoritesCommand = command;
+	}
+}
+
 static std::vector<std::string> split(const std::string &s, char delim) {
 	std::stringstream ss(s);
 	std::string item;

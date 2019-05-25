@@ -200,6 +200,10 @@ namespace DSN {
             foreach(string itemStr in itemTokens) {
                 try
                 {
+                    if (itemStr.Length == 0) {
+                        continue;
+                    }
+
                     string[] tokens = itemStr.Split(',');
                     string itemName = tokens[0];
                     long formId = long.Parse(tokens[1]);
