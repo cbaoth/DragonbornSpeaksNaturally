@@ -48,8 +48,8 @@ template <typename T>
 class BSTEventSink
 {
 public:
-	virtual ~BSTEventSink();
-	virtual	EventResult	ReceiveEvent(T * evn, EventDispatcher<T> * dispatcher); // pure
+  virtual ~BSTEventSink() { };
+	virtual	EventResult	ReceiveEvent(T * evn, EventDispatcher<T> * dispatcher) { return kEvent_Continue; }; // pure
 //	void	** _vtbl;	// 00
 };
 

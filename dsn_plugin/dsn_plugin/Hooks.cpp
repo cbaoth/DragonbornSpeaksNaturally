@@ -20,8 +20,8 @@ static GFxMovieView* dialogueMenu = NULL;
 static int desiredTopicIndex = 1;
 static int numTopics = 0;
 static int lastMenuState = -1;
-typedef UInt32 getDefaultCompiler(void* unk01, char* compilerName, UInt32 unk03);
 typedef void executeCommand(UInt32* unk01, void* parser, char* command);
+void InitDebugEventSink();
 
 static void __cdecl Hook_Loop()
 {
@@ -93,6 +93,7 @@ class ObjectLoadedSink : public BSTEventSink<TESObjectLoadedEvent> {
 			if (evn->loaded) {
 				FavoritesMenuManager::getInstance()->RefreshFavorites();
 				Log::info("Favorites Menu Voice-Equip Initialized");
+        //InitDebugEventSink();
 			}
 			else {
 				FavoritesMenuManager::getInstance()->ClearFavorites();
@@ -113,20 +114,163 @@ public:
 	}
 };
 
+// For debug only
+//#define DEBUG_EVENT_SINK_LOG_DIFF_MAP
+#define DEBUG_EVENT_SINK_PRINT_EACH
+#define DEBUG_EVENT_SINK_PRINT_INTERVAL 5000
+
+template <typename T>
+class DebugEventSink : public BSTEventSink<T> {
+  std::string name_;
+  DWORD beginTime_ = 0;
+  DWORD time_ = 0;
+  DWORD count_ = 0;
+  std::map<DWORD, DWORD> diffMap_;
+
+  DWORD printTime_ = 0;
+  DWORD printCount_ = 0;
+
+public:
+  DebugEventSink(const std::string& name)
+    : name_(name)
+    , beginTime_(GetTickCount())
+    , time_(beginTime_)
+    , printTime_(beginTime_){
+    Log::info("AddEventSink " + name_);
+  }
+
+  EventResult ReceiveEvent(T* evn, EventDispatcher<T>* dispatcher) override {
+    //Hook_Loop();
+
+    DWORD now = GetTickCount();
+    DWORD diff = now - time_;
+    time_ = now;
+    count_++;
+    printCount_++;
+
+#ifdef DEBUG_EVENT_SINK_PRINT_EACH
+    Log::info("ReceiveEvent " + name_ + ": " + std::to_string(count_) + ", " + std::to_string(diff) + "ms");
+#else
+    if (now - printTime_ >= DEBUG_EVENT_SINK_PRINT_INTERVAL) {
+      DWORD avgInterval = (now - printTime_) / printCount_;
+      Log::info("ReceiveEvent " + name_ + ": " + std::to_string(printCount_) + ", " + std::to_string(avgInterval) + "ms");
+      printTime_ = now;
+      printCount_ = 0;
+    }
+#endif
+
+#ifdef DEBUG_EVENT_SINK_LOG_DIFF_MAP
+    if (diff <= 20) {
+      diff -= diff % 5;
+    }
+    else if (diff <= 50) {
+      diff -= diff % 10;
+    }
+    else if (diff <= 500) {
+      diff -= diff % 100;
+    }
+    else if (diff <= 2000) {
+      diff -= diff % 500;
+    }
+    else {
+      diff -= diff % 1000;
+    }
+    diffMap_[diff]++;
+#endif
+
+    return kEvent_Continue;
+  }
+
+  ~DebugEventSink() {
+    if (count_ > 0) {
+      DWORD now = GetTickCount();
+      DWORD avgInterval = (now - beginTime_) / count_;
+      Log::info("RemoveEventSink " + name_ + ": " + std::to_string(count_) + ", " + std::to_string(avgInterval) + "ms");
+
+#ifdef DEBUG_EVENT_SINK_LOG_DIFF_MAP
+      for (auto itr : diffMap_) {
+        Log::info("\t" + std::to_string(itr.first) + "ms: " + std::to_string(itr.second));
+      }
+#endif
+    }
+    else {
+      Log::info("RemoveEventSink " + name_ + ": " + std::to_string(count_));
+    }
+  }
+};
+
+static void InitDebugEventSink() {
+  static DebugEventSink<void>                            unk00("unk00");	GetEventDispatcherList()->unk00.AddEventSink(&unk00);
+  //static DebugEventSink<void>                            unk58("unk58");	GetEventDispatcherList()->unk58.AddEventSink(&unk58);
+  //static DebugEventSink<TESActiveEffectApplyRemoveEvent> unkB0("unkB0");	GetEventDispatcherList()->unkB0.AddEventSink(&unkB0);
+  //static DebugEventSink<void>                            unk108("unk108");	GetEventDispatcherList()->unk108.AddEventSink(&unk108);
+  static DebugEventSink<void>                            unk160("unk160");	GetEventDispatcherList()->unk160.AddEventSink(&unk160);
+  //static DebugEventSink<TESCellAttachDetachEvent>        unk1B8("unk1B8");	GetEventDispatcherList()->unk1B8.AddEventSink(&unk1B8);
+  //static DebugEventSink<void>                            unk210("unk210");	GetEventDispatcherList()->unk210.AddEventSink(&unk210);
+  //static DebugEventSink<void>                            unk2C0("unk2C0");	GetEventDispatcherList()->unk2C0.AddEventSink(&unk2C0);
+  //static DebugEventSink<TESCombatEvent>                  combatDispatcher("combatDispatcher");	GetEventDispatcherList()->combatDispatcher.AddEventSink(&combatDispatcher);
+  //static DebugEventSink<TESContainerChangedEvent>        unk370("unk370");	GetEventDispatcherList()->unk370.AddEventSink(&unk370);
+  //static DebugEventSink<TESDeathEvent>                   deathDispatcher("deathDispatcher");	GetEventDispatcherList()->deathDispatcher.AddEventSink(&deathDispatcher);
+  static DebugEventSink<void>                            unk420("unk420");	GetEventDispatcherList()->unk420.AddEventSink(&unk420);
+  static DebugEventSink<void>                            unk478("unk478");	GetEventDispatcherList()->unk478.AddEventSink(&unk478);
+  //static DebugEventSink<void>                            unk4D0("unk4D0");	GetEventDispatcherList()->unk4D0.AddEventSink(&unk4D0);
+  //static DebugEventSink<void>                            unk528("unk528");	GetEventDispatcherList()->unk528.AddEventSink(&unk528);
+  //static DebugEventSink<void>                            unk580("unk580");	GetEventDispatcherList()->unk580.AddEventSink(&unk580);
+  static DebugEventSink<void>                            unk5D8("unk5D8");	GetEventDispatcherList()->unk5D8.AddEventSink(&unk5D8);
+  static DebugEventSink<void>                            unk630("unk630");	GetEventDispatcherList()->unk630.AddEventSink(&unk630);
+  //static DebugEventSink<TESInitScriptEvent>              initScriptDispatcher("initScriptDispatcher");	GetEventDispatcherList()->initScriptDispatcher.AddEventSink(&initScriptDispatcher);
+  static DebugEventSink<void>                            unk6E0("unk6E0");	GetEventDispatcherList()->unk6E0.AddEventSink(&unk6E0); // Archive loading completed
+  //static DebugEventSink<void>                            unk738("unk738");	GetEventDispatcherList()->unk738.AddEventSink(&unk738);
+  //static DebugEventSink<void>                            unk790("unk790");	GetEventDispatcherList()->unk790.AddEventSink(&unk790);
+  static DebugEventSink<void>                            unk7E8("unk7E8");	GetEventDispatcherList()->unk7E8.AddEventSink(&unk7E8);
+  //static DebugEventSink<void>                            unk840("unk840");	GetEventDispatcherList()->unk840.AddEventSink(&unk840);
+  //static DebugEventSink<TESObjectLoadedEvent>            objectLoadedDispatcher("objectLoadedDispatcher");	GetEventDispatcherList()->objectLoadedDispatcher.AddEventSink(&objectLoadedDispatcher);
+  //static DebugEventSink<void>                            unk8F0("unk8F0");	GetEventDispatcherList()->unk8F0.AddEventSink(&unk8F0);
+  static DebugEventSink<void>                            unk948("unk948");	GetEventDispatcherList()->unk948.AddEventSink(&unk948);
+  //static DebugEventSink<void>                            unk9A0("unk9A0");	GetEventDispatcherList()->unk9A0.AddEventSink(&unk9A0);
+  static DebugEventSink<void>                            unk9F8("unk9F8");	GetEventDispatcherList()->unk9F8.AddEventSink(&unk9F8); // Open/Close a door
+  //static DebugEventSink<void>                            unkA50("unkA50");	GetEventDispatcherList()->unkA50.AddEventSink(&unkA50);
+  //static DebugEventSink<void>                            unkAA8("unkAA8");	GetEventDispatcherList()->unkAA8.AddEventSink(&unkAA8);
+  //static DebugEventSink<void>                            unkB00("unkB00");	GetEventDispatcherList()->unkB00.AddEventSink(&unkB00);
+  //static DebugEventSink<void>                            unkB58("unkB58");	GetEventDispatcherList()->unkB58.AddEventSink(&unkB58);
+  static DebugEventSink<void>                            unkBB0("unkBB0");	GetEventDispatcherList()->unkBB0.AddEventSink(&unkBB0);
+  //static DebugEventSink<void>                            unkC08("unkC08");	GetEventDispatcherList()->unkC08.AddEventSink(&unkC08);
+  //static DebugEventSink<void>                            unkC60("unkC60");	GetEventDispatcherList()->unkC60.AddEventSink(&unkC60);
+  static DebugEventSink<void>                            unkCB8("unkCB8");	GetEventDispatcherList()->unkCB8.AddEventSink(&unkCB8);
+  //static DebugEventSink<void>                            unkD10("unkD10");	GetEventDispatcherList()->unkD10.AddEventSink(&unkD10);
+  static DebugEventSink<void>                            unkD68("unkD68");	GetEventDispatcherList()->unkD68.AddEventSink(&unkD68);
+  static DebugEventSink<void>                            unkDC0("unkDC0");	GetEventDispatcherList()->unkDC0.AddEventSink(&unkDC0);
+  static DebugEventSink<void>                            unkE18("unkE18");	GetEventDispatcherList()->unkE18.AddEventSink(&unkE18);
+  static DebugEventSink<void>                            unkE70("unkE70");	GetEventDispatcherList()->unkE70.AddEventSink(&unkE70);
+  static DebugEventSink<void>                            unkEC8("unkEC8");	GetEventDispatcherList()->unkEC8.AddEventSink(&unkEC8);
+  //static DebugEventSink<void>                            unkF20("unkF20");	GetEventDispatcherList()->unkF20.AddEventSink(&unkF20);
+  static DebugEventSink<void>                            unkF78("unkF78");	GetEventDispatcherList()->unkF78.AddEventSink(&unkF78);
+  static DebugEventSink<void>                            unkFD0("unkFD0");	GetEventDispatcherList()->unkFD0.AddEventSink(&unkFD0);
+  //static DebugEventSink<void>                            unk1028("unk1028");	GetEventDispatcherList()->unk1028.AddEventSink(&unk1028);
+  //static DebugEventSink<void>                            unk1080("unk1080");	GetEventDispatcherList()->unk1080.AddEventSink(&unk1080);
+  //static DebugEventSink<void>                            unk10D8("unk10D8");	GetEventDispatcherList()->unk10D8.AddEventSink(&unk10D8);
+  static DebugEventSink<void>                            unk1130("unk1130");	GetEventDispatcherList()->unk1130.AddEventSink(&unk1130);
+  static DebugEventSink<void>                            unk1188("unk1188");	GetEventDispatcherList()->unk1188.AddEventSink(&unk1188); // Before waiting
+  static DebugEventSink<void>                            unk11E0("unk11E0");	GetEventDispatcherList()->unk11E0.AddEventSink(&unk11E0); // After waiting
+  static DebugEventSink<void>                            unk1238("unk1238");	GetEventDispatcherList()->unk1238.AddEventSink(&unk1238);
+  //static DebugEventSink<TESUniqueIDChangeEvent>          uniqueIdChangeDispatcher("uniqueIdChangeDispatcher");	GetEventDispatcherList()->uniqueIdChangeDispatcher.AddEventSink(&uniqueIdChangeDispatcher);
+}
+
 static void __cdecl Hook_Invoke(GFxMovieView* movie, char * gfxMethod, GFxValue* argv, UInt32 argc)
 {
 #ifndef IS_VR
 	static bool inited = false;
-	if (!inited && g_SkyrimType == SE) {
-		// Currently in the source code directory is the latest version of SKSE64 instead of SKSEVR,
-		// so we can call GetSingleton() directly instead of use a RelocAddr.
-		static RunCommandSink runCommandSink;
-		static ObjectLoadedSink objectLoadedSink;
-		static PostLoadSink postLoadSink;
+	if (!inited) {
+    // Currently in the source code directory is the latest version of SKSE64 instead of SKSEVR,
+    // so we can call GetSingleton() directly instead of use a RelocAddr.
+    static RunCommandSink runCommandSink;
+    InputEventDispatcher::GetSingleton()->AddEventSink(&runCommandSink);
 
-		InputEventDispatcher::GetSingleton()->AddEventSink(&runCommandSink);
-		GetEventDispatcherList()->objectLoadedDispatcher.AddEventSink(&objectLoadedSink);
-		GetEventDispatcherList()->unk6E0.AddEventSink(&postLoadSink);
+    static ObjectLoadedSink objectLoadedSink;
+    GetEventDispatcherList()->objectLoadedDispatcher.AddEventSink(&objectLoadedSink);
+
+    static PostLoadSink postLoadSink;
+    GetEventDispatcherList()->unk6E0.AddEventSink(&postLoadSink);
 
 		inited = true;
 		Log::info("RunCommandSink Initialized");
@@ -164,10 +308,11 @@ static void __cdecl Hook_Invoke(GFxMovieView* movie, char * gfxMethod, GFxValue*
 	}
 }
 
+// VR Only
 static void __cdecl Hook_PostLoad() {
-	if (g_SkyrimType == VR) {
-		FavoritesMenuManager::getInstance()->RefreshFavorites();
-	}
+	FavoritesMenuManager::getInstance()->RefreshFavorites();
+	Log::info("Favorites Menu Voice-Equip Initialized");
+  //InitDebugEventSink();
 }
 
 static uintptr_t loopEnter = 0x0;
