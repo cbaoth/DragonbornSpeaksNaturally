@@ -162,8 +162,13 @@ bool VersionCheck::IsCompatibleExeVersion() {
 		#endif
 	}
 	else {
-		Log::info("Unsupported process: " + procName);
-		return false;
+		Log::info("Unknown process name: " + procName);
+
+		#ifdef IS_VR
+			g_SkyrimType = VR;
+		#else
+			g_SkyrimType = SE;
+		#endif
 	}
 
 	const std::string & runtimeDir = GetRuntimeDirectory();
