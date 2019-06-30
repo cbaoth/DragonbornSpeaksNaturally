@@ -76,14 +76,9 @@ set_target_properties(dsn_service PROPERTIES
 ###############
 
 if (SVR_DIR)
-    set(SVR_PLUGIN_DIR "${SVR_DIR}/Data/Plugins/Sumwunn")
-    message("-- SkyrimVR plugin install path: ${SVR_PLUGIN_DIR}/")
+    set(SVR_PLUGIN_DIR "${SVR_DIR}/Data/Plugins/Sumwunn/")
+    message("-- SkyrimVR plugin install path: ${SVR_PLUGIN_DIR}")
 
-    install(
-        TARGETS dsn_service
-        COMPONENT SkyrimVR
-        RUNTIME DESTINATION ${SVR_PLUGIN_DIR}
-    )
     add_custom_command(
         TARGET dsn_service POST_BUILD VERBATIM
         COMMAND
@@ -93,8 +88,8 @@ if (SVR_DIR)
 endif()
 
 if (SSE_DIR)
-    set(SSE_PLUGIN_DIR "${SSE_DIR}/Data/Plugins/Sumwunn")
-    message("-- SkyrimSE plugin install path: ${SSE_PLUGIN_DIR}/")
+    set(SSE_PLUGIN_DIR "${SSE_DIR}/Data/Plugins/Sumwunn/")
+    message("-- SkyrimSE plugin install path: ${SSE_PLUGIN_DIR}")
 
     add_custom_command(
         TARGET dsn_service POST_BUILD VERBATIM

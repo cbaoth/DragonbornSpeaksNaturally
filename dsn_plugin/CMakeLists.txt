@@ -183,8 +183,8 @@ set_target_properties(dsn_plugin_se PROPERTIES
 ###############
 
 if (SVR_DIR)
-    set(SVR_PLUGIN_DIR "${SVR_DIR}/Data/Plugins/Sumwunn")
-    message("-- SkyrimVR plugin install path: ${SVR_PLUGIN_DIR}/")
+    set(SVR_PLUGIN_DIR "${SVR_DIR}/Data/Plugins/Sumwunn/")
+    message("-- SkyrimVR plugin install path: ${SVR_PLUGIN_DIR}")
 
     add_custom_command(
         TARGET dsn_plugin_vr POST_BUILD VERBATIM
@@ -195,8 +195,8 @@ if (SVR_DIR)
 endif()
 
 if (SSE_DIR)
-    set(SSE_PLUGIN_DIR "${SSE_DIR}/Data/Plugins/Sumwunn")
-    message("-- SkyrimSE plugin install path: ${SSE_PLUGIN_DIR}/")
+    set(SSE_PLUGIN_DIR "${SSE_DIR}/Data/Plugins/Sumwunn/")
+    message("-- SkyrimSE plugin install path: ${SSE_PLUGIN_DIR}")
 
     add_custom_command(
         TARGET dsn_plugin_se POST_BUILD VERBATIM
