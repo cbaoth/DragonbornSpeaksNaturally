@@ -1,18 +1,45 @@
 #include "Log.h"
 #include <sstream>
 #include <fstream>
+#include <windows.h>
+#include <ShlObj.h>
 
-static bool LOG_ENABLED = true;
+Log* Log::instance = NULL;
 
 Log::Log()
 {
+	std::string baseDir = "";
+
+	{
+		CHAR myDocuments[MAX_PATH];
+		HRESULT result = SHGetFolderPathA(NULL, CSIDL_MYDOCUMENTS, NULL, SHGFP_TYPE_CURRENT, myDocuments);
+
+		if (result == S_OK) {
+			baseDir = std::string(myDocuments) + "/DragonbornSpeaksNaturally/";
+			// create dir
+			SHCreateDirectoryEx(NULL, baseDir.c_str(), NULL);
+		}
+	}
+
+	logFile.open(baseDir + "dragonborn_speaks.log", std::ios_base::out | std::ios_base::app);
+	if (!logFile) {
+		logEnabled = false;
+	}
 }
 
 Log::~Log()
 {
+	logFile.close();
 }
 
-Log* Log::instance = NULL;
+void Log::writeLine(std::string message)
+{
+	if (!logEnabled) {
+		return;
+	}
+	logFile << message << std::endl;
+	logFile.flush();
+}
 
 Log* Log::get() {
 	if (!instance)
@@ -21,9 +48,7 @@ Log* Log::get() {
 }
 
 void Log::info(std::string message) {
-	std::ofstream log_file(
-		"dragonborn_speaks.log", std::ios_base::out | std::ios_base::app);
-	log_file << message << std::endl;
+	get()->writeLine(message);
 }
 
 void Log::address(std::string message, uintptr_t addr) {

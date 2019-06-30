@@ -2,14 +2,21 @@
 #include "common/IPrefix.h"
 #include <cstdlib>
 #include <string>
+#include <fstream>
 
 class Log
 {
-public:
-	static Log* get();
+	static Log* instance;
+
+	bool logEnabled = true;
+	std::ofstream logFile;
+
 	Log();
 	~Log();
-	static Log* instance;
+	void writeLine(std::string message);
+
+public:
+	static Log* get();
 
 	static void info(std::string message);
 	static void address(std::string message, uintptr_t addr);
