@@ -166,8 +166,10 @@ bool VersionCheck::IsCompatibleExeVersion() {
 
 		#ifdef IS_VR
 			g_SkyrimType = VR;
+			Log::info("This dll is built for SkyrimSE and may not compatible with SkyrimVR.");
 		#else
 			g_SkyrimType = SE;
+			Log::info("This dll is built for SkyrimVR and may not compatible with SkyrimSE.");
 		#endif
 	}
 
@@ -189,12 +191,13 @@ bool VersionCheck::IsCompatibleExeVersion() {
 		Log::hex("Skyrim Version: ", version);
 		return false;
 	}
-	else if (version > kSkyrimCurVersion) {
-		Log::info("This version of Skyrim is newer than the version supported by DSN");
+	
+	if (version > kSkyrimCurVersion) {
+		Log::info("This version of Skyrim is newer than the version supported by DSN.");
+		Log::info("DSN will continue to try to load, but the game may crash.");
 		Log::info("Please install the latest version of DSN once it's available or downgrade your Skyrim to " + SKYRIM_VERSION_STR[g_SkyrimType]);
 		Log::info("Skyrim downgrading guide: https://www.nexusmods.com/skyrimspecialedition/mods/19658");
 		Log::hex("Skyrim Version: ", version);
-		return false;
 	}
 
 	Log::info("Skyrim compatibility check passed");
