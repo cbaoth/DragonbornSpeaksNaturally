@@ -15,9 +15,10 @@ Log::Log()
 		HRESULT result = SHGetFolderPathA(NULL, CSIDL_MYDOCUMENTS, NULL, SHGFP_TYPE_CURRENT, myDocuments);
 
 		if (result == S_OK) {
-			baseDir = std::string(myDocuments) + "/DragonbornSpeaksNaturally/";
+			baseDir = std::string(myDocuments) + "/DragonbornSpeaksNaturally";
 			// create dir
 			SHCreateDirectoryEx(NULL, baseDir.c_str(), NULL);
+			baseDir += "/";
 		}
 	}
 

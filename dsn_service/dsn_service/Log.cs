@@ -8,6 +8,14 @@ using System.Threading.Tasks;
 namespace DSN {
     class Log {
         public static void Initialize() {
+            try {
+                // remove the suffix "/"
+                System.IO.Directory.CreateDirectory(Configuration.MY_DOCUMENT_DSN_DIR.Substring(0, Configuration.MY_DOCUMENT_DSN_DIR.Length-1));
+            }
+            catch {
+                // ignore exceptions
+            }
+
             string logFilePath = Configuration.MY_DOCUMENT_DSN_DIR + Configuration.ERROR_LOG_FILE;
             try {
                 // The compiler constant TRACE needs to be defined, otherwise logs will not be output to the file.
