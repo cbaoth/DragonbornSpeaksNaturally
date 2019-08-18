@@ -109,6 +109,7 @@ namespace DSN {
             // Select input device
             try {
                 this.DSN.SetInputToDefaultAudioDevice();
+                Trace.TraceInformation("Recording device is ready.");
             } catch {
                 Trace.TraceInformation("Waiting for recording device...");
                 while (config.IsRunning()) {
