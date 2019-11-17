@@ -147,6 +147,10 @@ namespace DSN {
                     } else {
                         command = config.GetConsoleCommandList().GetCommandForPhrase(result.Grammar);
                         if (command != null) {
+                            // Starting with @ is the SRGS file, the command is in semantics
+                            if (command[0] == '@') {
+                                command = result.Semantics.Value.ToString();
+                            }
                             SubmitCommand("COMMAND|" + command);
                         }
                     }

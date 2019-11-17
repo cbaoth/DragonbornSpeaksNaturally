@@ -3,6 +3,7 @@ using IniParser.Model;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Speech.Recognition;
@@ -43,6 +44,8 @@ namespace DSN {
         private bool enableDialogueSubsetMatching = true;
         private SubsetMatchingMode configuredMatchingMode = DEFAULT_GRAMMAR_MATCHING_MODE;
 
+        private CultureInfo locale = CultureInfo.InstalledUICulture;
+
         public Configuration() {
             iniFilePath = resolveFilePath(CONFIG_FILE_NAME);
 
@@ -72,7 +75,12 @@ namespace DSN {
             pausePhrases = getPhrases("SpeechRecognition", "pausePhrases");
             resumePhrases = getPhrases("SpeechRecognition", "resumePhrases");
 
-            consoleCommandList = CommandList.FromIniSection(merged, "ConsoleCommands");
+            string localeStr = Get("SpeechRecognition", "Locale", "");
+            if (localeStr.Length > 0) {
+                locale = new CultureInfo(localeStr);
+            }
+
+            consoleCommandList = CommandList.FromIniSection(merged, "ConsoleCommands", locale);
             consoleCommandList.PrintToTrace();
         }
 
@@ -127,6 +135,10 @@ namespace DSN {
 
         public SubsetMatchingMode getConfiguredMatchingMode() {
             return configuredMatchingMode;
+        }
+
+        public CultureInfo GetLocale() {
+            return locale;
         }
 
         private void loadGlobal() {

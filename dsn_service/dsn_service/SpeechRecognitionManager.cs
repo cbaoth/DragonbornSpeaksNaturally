@@ -47,12 +47,11 @@ namespace DSN {
         public SpeechRecognitionManager(Configuration config) {
             this.config = config;
 
-            string locale = config.Get("SpeechRecognition", "Locale", CultureInfo.InstalledUICulture.Name);
             dialogueMinimumConfidence = float.Parse(config.Get("SpeechRecognition", "dialogueMinConfidence", "0.5"), CultureInfo.InvariantCulture);
             commandMinimumConfidence = float.Parse(config.Get("SpeechRecognition", "commandMinConfidence", "0.7"), CultureInfo.InvariantCulture);
             logAudioSignalIssues = config.Get("SpeechRecognition", "bLogAudioSignalIssues", "0") == "1";
 
-            Trace.TraceInformation("Locale: {0}\nDialogueConfidence: {1}\nCommandConfidence: {2}", locale, dialogueMinimumConfidence, commandMinimumConfidence);
+            Trace.TraceInformation("Locale: {0}\nDialogueConfidence: {1}\nCommandConfidence: {2}", config.GetLocale(), dialogueMinimumConfidence, commandMinimumConfidence);
 
             pauseAudioFile = config.Get("SpeechRecognition", "pauseAudioFile", DEFAULT_PAUSE_AUDIO_FILE).Trim();
             resumeAudioFile = config.Get("SpeechRecognition", "resumeAudioFile", DEFAULT_RESUME_AUDIO_FILE).Trim();
@@ -82,7 +81,7 @@ namespace DSN {
                 }
             }
 
-            this.DSN = new SpeechRecognitionEngine(new CultureInfo(locale));
+            this.DSN = new SpeechRecognitionEngine(config.GetLocale());
             this.DSN.UpdateRecognizerSetting("CFGConfidenceRejectionThreshold", 10); // Range is 0-100
             this.DSN.EndSilenceTimeoutAmbiguous = TimeSpan.FromMilliseconds(250);
             this.DSN.AudioStateChanged += DSN_AudioStateChanged;
