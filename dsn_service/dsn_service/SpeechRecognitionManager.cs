@@ -229,7 +229,11 @@ namespace DSN {
             this.DSN.RequestRecognizerUpdate();
             this.DSN.UnloadAllGrammars();
             foreach (Grammar grammar in grammars) {
-                this.DSN.LoadGrammarAsync(grammar);
+                try {
+                    this.DSN.LoadGrammar(grammar);
+                } catch (Exception ex) {
+                    Trace.TraceError("Load grammar '{0}' failed:\n{1}", grammar.Name, ex.ToString());
+                }
             }
         }
 
