@@ -80,7 +80,7 @@ namespace DSN {
                 locale = new CultureInfo(localeStr);
             }
 
-            consoleCommandList = CommandList.FromIniSection(merged, "ConsoleCommands", locale);
+            consoleCommandList = CommandList.FromIniSection(merged, "ConsoleCommands", this);
             consoleCommandList.PrintToTrace();
         }
 

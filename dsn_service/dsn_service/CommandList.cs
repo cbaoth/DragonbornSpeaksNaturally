@@ -14,7 +14,7 @@ using System.Xml;
 namespace DSN {
     class CommandList : ISpeechRecognitionGrammarProvider {
 
-        public static CommandList FromIniSection(IniData ini, string sectionName, CultureInfo locale) {
+        public static CommandList FromIniSection(IniData ini, string sectionName, Configuration config) {
             KeyDataCollection sectionData = ini.Sections[sectionName];
             CommandList list = new CommandList();
             if(sectionData != null) {
@@ -26,13 +26,19 @@ namespace DSN {
                     }
                     Grammar grammar;
                     if (value[0] == '@') {
+                        string path = config.resolveFilePath(value.Substring(1));
+                        if (path == null) {
+                            Trace.TraceError("Cannot find the SRGS XML file '{0}', key: {1}", value.Substring(1), key.KeyName);
+                            continue;
+                        }
+
                         // load a SRGS XML file
                         XmlDocument doc = new XmlDocument();
-                        doc.Load(value.Substring(1));
+                        doc.Load(path);
 
                         // If xml:lang in the file does not match the DSN's locale, the grammar cannot be loaded.
                         XmlAttribute xmlLang = doc.CreateAttribute("xml:lang");
-                        xmlLang.Value = locale.Name;
+                        xmlLang.Value = config.GetLocale().Name;
                         doc.DocumentElement.SetAttributeNode(xmlLang);
 
                         MemoryStream xmlStream = new MemoryStream();
