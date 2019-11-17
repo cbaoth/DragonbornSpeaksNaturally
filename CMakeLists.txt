@@ -38,12 +38,14 @@ if (PACKAGE)
         FILES
             ${CMAKE_CURRENT_SOURCE_DIR}/DragonbornSpeaksNaturally.SAMPLE.ini
             ${CMAKE_CURRENT_SOURCE_DIR}/item-name-map.SAMPLE.json
+            ${CMAKE_CURRENT_SOURCE_DIR}/SRGS.SAMPLE.xml
         DESTINATION SkyrimVR/Data/Plugins/Sumwunn
     )
     install(
         FILES
             ${CMAKE_CURRENT_SOURCE_DIR}/DragonbornSpeaksNaturally.SAMPLE.ini
             ${CMAKE_CURRENT_SOURCE_DIR}/item-name-map.SAMPLE.json
+            ${CMAKE_CURRENT_SOURCE_DIR}/SRGS.SAMPLE.xml
         DESTINATION SkyrimSE/Data/Plugins/Sumwunn
     )
 

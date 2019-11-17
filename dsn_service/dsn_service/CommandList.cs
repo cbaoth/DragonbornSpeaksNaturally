@@ -46,7 +46,6 @@ namespace DSN {
                         xmlStream.Flush(); //Adjust this if you want read your data 
                         xmlStream.Position = 0;
 
-                        //SrgsDocument srgsDoc = new SrgsDocument(doc);
                         grammar = new Grammar(xmlStream);
                     } else {
                         grammar = new Grammar(new GrammarBuilder(key.KeyName));
