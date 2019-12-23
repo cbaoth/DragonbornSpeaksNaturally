@@ -131,7 +131,7 @@ target_compile_options(sse_common PUBLIC /FI"string" /FI"common/IPrefix.h")
 target_compile_definitions(sse_skse64 PRIVATE
     SKSE64_EXPORTS
     RUNTIME
-    RUNTIME_VERSION=0x010503E0
+    RUNTIME_VERSION=0x01050610
 )
 
 target_link_libraries(sse_skse64_common sse_common)

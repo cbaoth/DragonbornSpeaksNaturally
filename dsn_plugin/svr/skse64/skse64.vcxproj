@@ -14,14 +14,10 @@
     <ProjectGuid>{639411C0-FC23-4819-A0C5-429A4E5D8A51}</ProjectGuid>
     <RootNamespace>skse64</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
-    <SccProjectName>
-    </SccProjectName>
-    <SccAuxPath>
-    </SccAuxPath>
-    <SccLocalPath>
-    </SccLocalPath>
-    <SccProvider>
-    </SccProvider>
+    <SccProjectName>SAK</SccProjectName>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccProvider>SAK</SccProvider>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -31,9 +27,9 @@
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
@@ -50,10 +46,10 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <TargetName>sksevr_1_3_64</TargetName>
+    <TargetName>sksevr_1_4_15</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <TargetName>sksevr_1_3_64</TargetName>
+    <TargetName>sksevr_1_4_15</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -61,7 +57,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>false</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_DEBUG;_WINDOWS;_USRDLL;SKSE64_EXPORTS;RUNTIME_VERSION=0x01030401;RUNTIME;IS_VR;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;_USRDLL;SKSE64_EXPORTS;RUNTIME_VERSION=0x010400F1;RUNTIME;IS_VR;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <ForcedIncludeFiles>common/IPrefix.h</ForcedIncludeFiles>
     </ClCompile>
@@ -80,7 +76,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir);$(SolutionDir)\..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>NDEBUG;_WINDOWS;_USRDLL;SKSE64_EXPORTS;RUNTIME;RUNTIME_VERSION=0x01030401;IS_VR;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_WINDOWS;_USRDLL;SKSE64_EXPORTS;RUNTIME;RUNTIME_VERSION=0x010400F1;IS_VR;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <ForcedIncludeFiles>common/IPrefix.h</ForcedIncludeFiles>
     </ClCompile>
@@ -90,8 +86,7 @@
       <SubSystem>Windows</SubSystem>
     </Link>
     <PostBuildEvent>
-      <Command>
-      </Command>
+      <Command>copy "$(TargetPath)" "$(SkyrimVRPath)\$(TargetFileName)" /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -389,7 +384,7 @@
     <None Include="PapyrusNativeFunctionDef_Base.inl" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\common\common_vc14.vcxproj">
+    <ProjectReference Include="..\..\common\common_vc14.vcxproj">
       <Project>{472e19ab-def0-42df-819b-18722e8dc822}</Project>
     </ProjectReference>
     <ProjectReference Include="..\skse64_common\skse64_common.vcxproj">
