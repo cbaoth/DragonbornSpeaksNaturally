@@ -39,7 +39,7 @@ You can find the loader here: https://www.nexusmods.com/skyrimspecialedition/mod
               </typeDescriptor>
             </plugin>
             <plugin name="Skyrim Special Edition">
-              <description><![CDATA[This plugin is compatible and only compatible with Skyrim Special Edition 1.5.73.0.
+              <description><![CDATA[This plugin is compatible and only compatible with Skyrim Special Edition 1.5.97.0.
 
 To make the plugin working, you must manually install xSHADOWMANx's Dll Loader to the game root directory.
 
