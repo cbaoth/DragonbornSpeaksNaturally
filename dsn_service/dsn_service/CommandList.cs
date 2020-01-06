@@ -48,7 +48,7 @@ namespace DSN {
 
                         grammar = new Grammar(xmlStream);
                     } else {
-                        grammar = new Grammar(new GrammarBuilder(key.KeyName));
+                        grammar = Phrases.createGrammar(Phrases.normalize(key.KeyName, config), config);
                     }
                     grammar.Name = key.KeyName;
                     list.commandsByPhrase[grammar] = value;

@@ -63,7 +63,7 @@ namespace DSN {
                     continue;
                 Trace.TraceInformation("Found pause phrase: '{0}'", phrase);
                 try {
-                    Grammar g = new Grammar(new GrammarBuilder(Phrases.normalize(phrase)));
+                    Grammar g = Phrases.createGrammar(Phrases.normalize(phrase, config), config);
                     pausePhrases.Add(g);
                 } catch (Exception ex) {
                     Trace.TraceError("Failed to create grammar for pause phrase {0} due to exception:\n{1}", phrase, ex.ToString());
@@ -74,7 +74,7 @@ namespace DSN {
                     continue;
                 Trace.TraceInformation("Found resume phrase: '{0}'", phrase);
                 try {
-                    Grammar g = new Grammar(new GrammarBuilder(Phrases.normalize(phrase)));
+                    Grammar g = Phrases.createGrammar(Phrases.normalize(phrase, config), config);
                     resumePhrases.Add(g);
                 } catch (Exception ex) {
                     Trace.TraceError("Failed to create grammar for resume phrase {0} due to exception:\n{1}", phrase, ex.ToString());

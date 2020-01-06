@@ -53,14 +53,14 @@ namespace DSN {
             }
 
             leftHandSuffix = config.Get("Favorites", "equipLeftSuffix", "left")
-                .Split(';').Select((x) => Phrases.normalize(x)).ToArray();
+                .Split(';').Select((x) => Phrases.normalize(x, config)).ToArray();
             rightHandSuffix = config.Get("Favorites", "equipRightSuffix", "right")
-                .Split(';').Select((x) => Phrases.normalize(x)).ToArray();
+                .Split(';').Select((x) => Phrases.normalize(x, config)).ToArray();
             bothHandsSuffix = config.Get("Favorites", "equipBothSuffix", "both")
-                .Split(';').Select((x) => Phrases.normalize(x)).ToArray();
+                .Split(';').Select((x) => Phrases.normalize(x, config)).ToArray();
 
             List<string> equipPrefixList = config.Get("Favorites", "equipPhrasePrefix", "equip")
-                .Split(';').Select((x) => Phrases.normalize(x)).ToList();
+                .Split(';').Select((x) => Phrases.normalize(x, config)).ToList();
             for (int i=equipPrefixList.Count-1; i>=0; i--) {
                 if (equipPrefixList[i].Length == 0) {
                     equipPrefixList.RemoveAt(i);
@@ -110,7 +110,7 @@ namespace DSN {
             //       Sorting is currently done in the constructor.
             //       Note: Adding leading space alleviates the problem, but some languages don't add spaces between words.
             //
-            itemName = Phrases.normalize(itemName).ToLower();
+            itemName = Phrases.normalize(itemName, config).ToLower();
 
             foreach (string type in knownEquipmentTypes) {
                 if (itemName.Contains(type)) {
@@ -140,7 +140,7 @@ namespace DSN {
             }
 
             grammarBuilder.Append(equipPrefixChoice, omitHandSuffix ? 0 : 1, 1);
-            grammarBuilder.Append(phrase);
+            Phrases.appendPhrase(grammarBuilder, phrase, config);
 
             // Append hand choice suffix
             if (isSingleHanded && !useEquipHandPrefix)
@@ -214,7 +214,7 @@ namespace DSN {
                     itemName = MaybeReplaceItemName(itemNameMap, itemName);
                     string command = formId + ";" + itemId + ";" + typeId + ";";
 
-                    BuildAndAddGrammar(equipPhrasePrefix, Phrases.normalize(itemName), command, isSingleHanded);
+                    BuildAndAddGrammar(equipPhrasePrefix, Phrases.normalize(itemName, config), command, isSingleHanded);
 
                     // Are we looking at an equipment of some sort?
                     // Record the first item of a specific weapon type
@@ -222,7 +222,7 @@ namespace DSN {
                     if(equipmentType != null && !firstEquipmentOfType.ContainsKey(equipmentType))
                     {
                         Trace.TraceInformation("ProbableEquipmentType: {0} -> {1}", itemName, equipmentType);
-                        BuildAndAddGrammar(equipPhrasePrefix, Phrases.normalize(equipmentType), command, isSingleHanded);
+                        BuildAndAddGrammar(equipPhrasePrefix, Phrases.normalize(equipmentType, config), command, isSingleHanded);
                     }
                 } catch(Exception ex) {
                     Trace.TraceError("Failed to parse {0} due to exception:\n{1}", itemStr, ex.ToString());

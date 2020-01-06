@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Speech.Recognition;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,8 +18,19 @@ namespace DSN {
         public static readonly string MY_DOCUMENT_DSN_DIR = System.Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\DragonbornSpeaksNaturally\\";
         public static readonly string ERROR_LOG_FILE = "DragonbornSpeaksNaturally.log";
 
-        private readonly string CONFIG_FILE_NAME = "DragonbornSpeaksNaturally.ini";
+        private static readonly string CONFIG_FILE_NAME = "DragonbornSpeaksNaturally.ini";
         private static readonly SubsetMatchingMode DEFAULT_GRAMMAR_MATCHING_MODE = SubsetMatchingMode.OrderedSubsetContentRequired;
+
+        // Double quotes are not allowed in the speech recognition engine.
+        // About "(?<![a-zA-Z])'":
+        //   Using single quotes with Chinese may cause exceptions.
+        //   Like this: "吉'扎格的火焰风暴卷轴".
+        //   So we need to remove the quote if it is not preceded by a letter.
+        private static readonly string DEFAULT_NORMALIZE_EXPRESSION = @"(?:""|\s+|(?<![a-zA-Z])')";
+        private static readonly string DEFAULT_NORMALIZE_REPLACEMENT = @" ";
+
+        private static readonly string DEFAULT_OPTIONAL_EXPRESSION = @"(?:\(([^)]*)\)|\[([^\]]*)\]|{([^}]*)}|<([^>]*)>)";
+        private static readonly string DEFAULT_OPTIONAL_REPLACEMENT = @"$1$2$3$4";
 
         // NOTE: Relative to SkyrimVR.exe
         private readonly string[] SEARCH_DIRECTORIES = {
@@ -43,6 +55,11 @@ namespace DSN {
         private CommandList consoleCommandList = null;
         private bool enableDialogueSubsetMatching = true;
         private SubsetMatchingMode configuredMatchingMode = DEFAULT_GRAMMAR_MATCHING_MODE;
+
+        private Regex normalizeExpression = null;
+        private string normalizeReplacement = "";
+        private Regex optionalExpression = null;
+        private string optionalReplacement = "";
 
         private CultureInfo locale = CultureInfo.InstalledUICulture;
 
@@ -75,6 +92,18 @@ namespace DSN {
             pausePhrases = getPhrases("SpeechRecognition", "pausePhrases");
             resumePhrases = getPhrases("SpeechRecognition", "resumePhrases");
 
+            string nmlExpStr = Get("SpeechRecognition", "normalizeExpression", DEFAULT_NORMALIZE_EXPRESSION);
+            if (nmlExpStr.Length > 0) {
+                normalizeExpression = new Regex(nmlExpStr);
+                normalizeReplacement = Get("SpeechRecognition", "normalizeReplacement", DEFAULT_NORMALIZE_REPLACEMENT);
+            }
+
+            string opExpStr = Get("SpeechRecognition", "optionalExpression", DEFAULT_OPTIONAL_EXPRESSION);
+            if (opExpStr.Length > 0) {
+                optionalExpression = new Regex(opExpStr);
+                optionalReplacement = Get("SpeechRecognition", "optionalReplacement", DEFAULT_OPTIONAL_REPLACEMENT);
+            }
+
             string localeStr = Get("SpeechRecognition", "Locale", "");
             if (localeStr.Length > 0) {
                 locale = new CultureInfo(localeStr);
@@ -100,6 +129,10 @@ namespace DSN {
             string val = merged[section][key];
             if (val == null)
                 return def;
+            // Remove surrounding quotes
+            if (val.Length >=2 && val.Substring(0, 1) == "\"" && val.Substring(val.Length - 1, 1) == "\"") {
+                val = val.Substring(1, val.Length - 2);
+            }
             return val;
         }
 
@@ -135,6 +168,22 @@ namespace DSN {
 
         public SubsetMatchingMode getConfiguredMatchingMode() {
             return configuredMatchingMode;
+        }
+
+        public Regex GetOptionalExpression() {
+            return optionalExpression;
+        }
+
+        public string GetOptionalReplacement() {
+            return optionalReplacement;
+        }
+
+        public Regex GetNormalizeExpression() {
+            return normalizeExpression;
+        }
+
+        public string GetNormalizeReplacement() {
+            return normalizeReplacement;
         }
 
         public CultureInfo GetLocale() {
