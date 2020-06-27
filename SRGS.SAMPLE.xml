@@ -13,10 +13,9 @@
 		<one-of>
 			<item><ruleref uri="#Shortcuts" /></item>
 			<item><ruleref uri="#MainSpells" /></item>
-			<item><ruleref uri="#ApocalypseSpells" /></item>
-			<item><ruleref uri="#MainPowers" /></item>
 			<item><ruleref uri="#MainShouts" /></item>
-			<item><ruleref uri="#ThunderchildShouts" /></item>
+			<item><ruleref uri="#MainPowers" /></item>
+
 		</one-of>
 	</rule>
 
@@ -50,6 +49,9 @@
 		</one-of>
 	</rule>
 
+
+
+
 	<rule id="MainSpells">
 		<one-of>
 			<item><ruleref uri="#VanillaSpellNames" /><tag>var spell=rules.latest()</tag></item>
@@ -60,14 +62,15 @@
 		<tag>out = "bat DBU_Before; " + rules.HandSelector + "; set DBU_Spell_Selector to " + spell.id + "; setstage DBU_Main " + spell.mod</tag>
 	</rule>
 
-	<rule id="ApocalypseSpells">
+	<rule id="MainShouts">
 		<one-of>
-			<item><ruleref uri="#ApocalypseSpellNames" /><tag>var spell=rules.latest()</tag></item>
+			<item><ruleref uri="#VanillaShoutNames" /><tag>var spell=rules.latest()</tag></item>
+			<item><ruleref uri="#DawnguardShoutNames" /><tag>var spell=rules.latest()</tag></item>
+			<item><ruleref uri="#DragonbornShoutNames" /><tag>var spell=rules.latest()</tag></item>
 		</one-of>
-		<ruleref uri="#HandSelector" />
-		<tag>out = "bat DBU_Before; resetquest DBU_Apocalypse; " + rules.HandSelector + "; set DBU_Spell_Selector to " + spell.id + "; setstage DBU_Apocalypse " + spell.mod</tag>
+		<tag>out = "bat DBU_Before; set DBU_Hand_Selector to " + spell.level + "; set DBU_Shout_Selector to " + spell.id + "; setstage DBU_Main " + spell.mod</tag>
 	</rule>
-
+	
 	<rule id="MainPowers">
 		<one-of>
 			<item><ruleref uri="#VanillaPowerNames" /><tag>var spell=rules.latest()</tag></item>
@@ -78,22 +81,8 @@
 		<tag>out = "bat DBU_Before; " + rules.HandSelector + "; set DBU_Power_Selector to " + spell.id + "; setstage DBU_Main " + spell.mod</tag>
 	</rule>
 
-	<rule id="MainShouts">
-		<one-of>
-			<item><ruleref uri="#VanillaShoutNames" /><tag>var spell=rules.latest()</tag></item>
-			<item><ruleref uri="#DawnguardShoutNames" /><tag>var spell=rules.latest()</tag></item>
-			<item><ruleref uri="#DragonbornShoutNames" /><tag>var spell=rules.latest()</tag></item>
-		</one-of>
-		<tag>out = "bat DBU_Before; set DBU_Hand_Selector to " + spell.level + "; set DBU_Shout_Selector to " + spell.id + "; setstage DBU_Main " + spell.mod</tag>
-	</rule>
-
-	<rule id="ThunderchildShouts">
-		<one-of>
-			<item><ruleref uri="#ThunderchildShoutNames" /><tag>var spell=rules.latest()</tag></item>
-		</one-of>
-		<tag>out = "bat DBU_Before; resetquest DBU_Thunderchild; set DBU_Hand_Selector to  " + spell.level + "; set DBU_Shout_Selector to " + spell.id + "; setstage DBU_Thunderchild " + spell.mod</tag>
-	</rule>
-
+	
+	<!--Vanilla-->
 	<rule id="VanillaSpellNames">
 		<tag>out.mod=1</tag>
 		<one-of>
@@ -199,195 +188,270 @@
 		</one-of>
 	</rule>
 
-	<rule id="DawnguardSpellNames">
-		<tag>out.mod=2</tag>
-		<one-of>
-			<item>Conjure Boneman		<tag>out.id=1</tag></item>
-			<item>Conjure Mistman		<tag>out.id=2</tag></item>
-			<item>Conjure Wrathman		<tag>out.id=3</tag></item>
-			<item>Heal Undead			<tag>out.id=4</tag></item>
-			<item>Necromantic Healing	<tag>out.id=5</tag></item>
-			<item>Stendarr's Aura		<tag>out.id=6</tag></item>
-			<item>Summon Arvak			<tag>out.id=7</tag></item>
-			<item>Sun Fire				<tag>out.id=8</tag></item>
-			<item>Vampire's Bane		<tag>out.id=9</tag></item>
-		</one-of>
-	</rule>
-
-	<rule id="DragonbornSpellNames">
-		<tag>out.mod=3</tag>
-		<one-of>
-			<item>Ash Rune				<tag>out.id=1</tag></item>
-			<item>Ash Shell				<tag>out.id=2</tag></item>
-			<item>Bound Dagger			<tag>out.id=3</tag></item>
-			<item>Conjure Ash Guardian	<tag>out.id=4</tag></item>
-			<item>Conjure Ash Spawn		<tag>out.id=5</tag></item>
-			<item>Conjure Seeker		<tag>out.id=6</tag></item>
-			<item>Freeze				<tag>out.id=7</tag></item>
-			<item>Frenzy Rune			<tag>out.id=8</tag></item>
-			<item>Ignite				<tag>out.id=9</tag></item>
-			<item>Poison Rune			<tag>out.id=10</tag></item>
-			<item>Whirlwind Cloak		<tag>out.id=11</tag></item>
-		</one-of>
-	</rule>
-	<rule id="ApocalypseSpellNames">
+	<rule id="VanillaShoutNames">
 		<tag>out.mod=1</tag>
 		<one-of>
-			<item>Acceleration Rune				<tag>out.id=1</tag></item>
-			<item>Alarm							<tag>out.id=2</tag></item>
-			<item>Apocalypse					<tag>out.id=3</tag></item>
-			<item>Atronach Mark					<tag>out.id=4</tag></item>
-			<item>Azure Reconstruction			<tag>out.id=5</tag></item>
-			<item>Backlash						<tag>out.id=6</tag></item>
-			<item>Banish Living					<tag>out.id=7</tag></item>
-			<item>Battletide					<tag>out.id=8</tag></item>
-			<item>Blood Boil					<tag>out.id=9</tag></item>
-			<item>Blood for Blood				<tag>out.id=10</tag></item>
-			<item>Bloodseeker					<tag>out.id=11</tag></item>
-			<item>Bolide						<tag>out.id=12</tag></item>
-			<item>Bombardment					<tag>out.id=13</tag></item>
-			<item>Bone Spirit					<tag>out.id=14</tag></item>
-			<item>Breath of Arkay				<tag>out.id=15</tag></item>
-			<item>Channel Energies				<tag>out.id=16</tag></item>
-			<item>Circle of Death				<tag>out.id=17</tag></item>
-			<item>Circle of Strength			<tag>out.id=18</tag></item>
-			<item>Circle of the Moons			<tag>out.id=19</tag></item>
-			<item>Compelling Whispers			<tag>out.id=20</tag></item>
-			<item>Conjure Avenging Wraith		<tag>out.id=21</tag></item>
-			<item>Conjure Battlemage			<tag>out.id=22</tag></item>
-			<item>Conjure Bear Totem			<tag>out.id=23</tag></item>
-			<item>Conjure Cat Totem				<tag>out.id=24</tag></item>
-			<item>Conjure Craftlord				<tag>out.id=25</tag></item>
-			<item>Conjure Deadeye Captain		<tag>out.id=26</tag></item>
-			<item>Conjure Dremora Assassin		<tag>out.id=27</tag></item>
-			<item>Conjure Dremora Champion		<tag>out.id=28</tag></item>
-			<item>Conjure Dremora Churl			<tag>out.id=29</tag></item>
-			<item>Conjure Dremora Honor Guard	<tag>out.id=30</tag></item>
-			<item>Conjure Dremora Mentor		<tag>out.id=31</tag></item>
-			<item>Conjure Dremora Pit Fighter	<tag>out.id=32</tag></item>
-			<item>Conjure Herne					<tag>out.id=33</tag></item>
-			<item>Conjure Kyrkrim				<tag>out.id=34</tag></item>
-			<item>Conjure Lich					<tag>out.id=35</tag></item>
-			<item>Conjure Lord of Bindings		<tag>out.id=36</tag></item>
-			<item>Conjure Nether Lich			<tag>out.id=37</tag></item>
-			<item>Conjure Weeping Daedra		<tag>out.id=38</tag></item>
-			<item>Conjure Xivilai Lord			<tag>out.id=39</tag></item>
-			<item>Conjure Xivilai Sorcerer		<tag>out.id=40</tag></item>
-			<item>Consuming Power				<tag>out.id=41</tag></item>
-			<item>Control Weather				<tag>out.id=42</tag></item>
-			<item>Corpse Explosion				<tag>out.id=43</tag></item>
-			<item>Crackle						<tag>out.id=44</tag></item>
-			<item>Creeping Cold					<tag>out.id=45</tag></item>
-			<item>Curse of the Silent			<tag>out.id=46</tag></item>
-			<item>Cyclonic Rift					<tag>out.id=47</tag></item>
-			<item>Daedric Crescent				<tag>out.id=48</tag></item>
-			<item>Decompose						<tag>out.id=49</tag></item>
-			<item>Deep Storage					<tag>out.id=50</tag></item>
-			<item>Detonate Lock					<tag>out.id=51</tag></item>
-			<item>Dispel Magic					<tag>out.id=52</tag></item>
-			<item>Dragon's Teeth				<tag>out.id=53</tag></item>
-			<item>Drop Zone						<tag>out.id=54</tag></item>
-			<item>Dust To Dust					<tag>out.id=55</tag></item>
-			<item>Electrosphere					<tag>out.id=56</tag></item>
-			<item>Empathic Agony				<tag>out.id=57</tag></item>
-			<item>Enslave the Weak				<tag>out.id=58</tag></item>
-			<item>Entomb						<tag>out.id=59</tag></item>
-			<item>Evil Twin						<tag>out.id=60</tag></item>
-			<item>Fabricate Object				<tag>out.id=61</tag></item>
-			<item>Figment of Pain				<tag>out.id=62</tag></item>
-			<item>Finger of Death				<tag>out.id=63</tag></item>
-			<item>Fingers of the Mountain		<tag>out.id=64</tag></item>
-			<item>Flamestrike					<tag>out.id=65</tag></item>
-			<item>Forbidden Sun					<tag>out.id=66</tag></item>
-			<item>Fracture						<tag>out.id=67</tag></item>
-			<item>Frost Nova					<tag>out.id=68</tag></item>
-			<item>Frozen Orb					<tag>out.id=69</tag></item>
-			<item>Ghostwalk						<tag>out.id=70</tag></item>
-			<item>Godform						<tag>out.id=71</tag></item>
-			<item>Hailstone						<tag>out.id=72</tag></item>
-			<item>Harrowing Dirge				<tag>out.id=73</tag></item>
-			<item>Healing Blossom				<tag>out.id=74</tag></item>
-			<item>Hethoth's Grimoire			<tag>out.id=75</tag></item>
-			<item>Hidden Cobra					<tag>out.id=76</tag></item>
-			<item>Horrid Wilting				<tag>out.id=77</tag></item>
-			<item>Howling Blast					<tag>out.id=78</tag></item>
-			<item>Ice Shiv						<tag>out.id=79</tag></item>
-			<item>Illusory Flames				<tag>out.id=80</tag></item>
-			<item>Illusory Pyre					<tag>out.id=81</tag></item>
-			<item>Incendiary Flow				<tag>out.id=82</tag></item>
-			<item>Inferno						<tag>out.id=83</tag></item>
-			<item>Infinite Light				<tag>out.id=84</tag></item>
-			<item>King's Heart					<tag>out.id=85</tag></item>
-			<item>Knowledge is Power			<tag>out.id=86</tag></item>
-			<item>Lamb of Mara					<tag>out.id=87</tag></item>
-			<item>Last Word						<tag>out.id=88</tag></item>
-			<item>Leech Seed					<tag>out.id=89</tag></item>
-			<item>Life's Finale					<tag>out.id=90</tag></item>
-			<item>Lightning Strike				<tag>out.id=91</tag></item>
-			<item>Locate Object					<tag>out.id=92</tag></item>
-			<item>Longstride					<tag>out.id=93</tag></item>
-			<item>Magicka Void					<tag>out.id=94</tag></item>
-			<item>Malviser's Gauntlet			<tag>out.id=95</tag></item>
-			<item>Meridia's Wrath				<tag>out.id=96</tag></item>
-			<item>Milestones					<tag>out.id=97</tag></item>
-			<item>Mimic's Cloak					<tag>out.id=98</tag></item>
-			<item>Mind Control					<tag>out.id=99</tag></item>
-			<item>Mind Vision					<tag>out.id=100</tag></item>
-			<item>Mirror Entity					<tag>out.id=101</tag></item>
-			<item>Mystic Wind					<tag>out.id=102</tag></item>
-			<item>Nature's Balance				<tag>out.id=103</tag></item>
-			<item>Necroplague					<tag>out.id=104</tag></item>
-			<item>Necrowitch					<tag>out.id=105</tag></item>
-			<item>Oathbound Guardian			<tag>out.id=106</tag></item>
-			<item>Ocato's Recital				<tag>out.id=107</tag></item>
-			<item>Pale Shadow					<tag>out.id=108</tag></item>
-			<item>Perilous Path					<tag>out.id=109</tag></item>
-			<item>Power of the Master			<tag>out.id=110</tag></item>
-			<item>Prepare for Adventure			<tag>out.id=111</tag></item>
-			<item>Pull From Eternity			<tag>out.id=112</tag></item>
-			<item>Raise Wall					<tag>out.id=113</tag></item>
-			<item>Resurgence					<tag>out.id=114</tag></item>
-			<item>Reynos' Fins					<tag>out.id=115</tag></item>
-			<item>Rift Bolt						<tag>out.id=116</tag></item>
-			<item>Ruin							<tag>out.id=117</tag></item>
-			<item>Scattershock					<tag>out.id=118</tag></item>
-			<item>Scorching Hands				<tag>out.id=119</tag></item>
-			<item>Scream of Pain				<tag>out.id=120</tag></item>
-			<item>Sealed Resolve				<tag>out.id=121</tag></item>
-			<item>Seidstone						<tag>out.id=122</tag></item>
-			<item>Shadowbond					<tag>out.id=123</tag></item>
-			<item>Shared Trauma					<tag>out.id=124</tag></item>
-			<item>Shattering Crystal			<tag>out.id=125</tag></item>
-			<item>Shock Nova					<tag>out.id=126</tag></item>
-			<item>Shroudwalk					<tag>out.id=127</tag></item>
-			<item>Slay Living					<tag>out.id=128</tag></item>
-			<item>Sleet Storm					<tag>out.id=129</tag></item>
-			<item>Sotha's Maelstrom				<tag>out.id=130</tag></item>
-			<item>Soul Cloak					<tag>out.id=131</tag></item>
-			<item>Spectral Warband				<tag>out.id=132</tag></item>
-			<item>Spell Twine					<tag>out.id=133</tag></item>
-			<item>Static Dome					<tag>out.id=134</tag></item>
-			<item>Strength of Earth				<tag>out.id=135</tag></item>
-			<item>Summoning Rune				<tag>out.id=136</tag></item>
-			<item>Talons of Nirn				<tag>out.id=137</tag></item>
-			<item>Tharn's Prison				<tag>out.id=138</tag></item>
-			<item>Thoughtsteal					<tag>out.id=139</tag></item>
-			<item>Thrumming Stone				<tag>out.id=140</tag></item>
-			<item>Thundercrack					<tag>out.id=141</tag></item>
-			<item>Thundering Hooves				<tag>out.id=142</tag></item>
-			<item>Tree Rings					<tag>out.id=143</tag></item>
-			<item>Tumble Magnet					<tag>out.id=144</tag></item>
-			<item>Twister						<tag>out.id=145</tag></item>
-			<item>Unbound Fire					<tag>out.id=146</tag></item>
-			<item>Undermine						<tag>out.id=147</tag></item>
-			<item>Vanish						<tag>out.id=148</tag></item>
-			<item>Volcano						<tag>out.id=149</tag></item>
-			<item>Welling Blood					<tag>out.id=150</tag></item>
-			<item>Wild Healing					<tag>out.id=151</tag></item>
-			<item>Wind Running					<tag>out.id=152</tag></item>
-			<item>Wither						<tag>out.id=153</tag></item>
-			<item>Worm Shroud					<tag>out.id=154</tag></item>
-			<item>Wyrd							<tag>out.id=155</tag></item>
+			<!-- Animal Allegiance -->
+				<item>
+					Animal Allegiance <tag>out.id=1; out.level=0</tag>
+				</item>					
+				<item>
+					Raan <tag>out.id=1; out.level=1</tag>
+					<item repeat="0-1">
+						Mir <tag>out.level=2</tag>
+						<item repeat="0-1">
+							Tah <tag>out.level=3</tag>
+						</item>
+					</item>
+				</item>
+			
+			<!-- Aura Whisper -->
+				<item>
+					Aura Whisper <tag>out.id=2; out.level=0</tag>
+				</item>				
+				<item>
+					Laas <tag>out.id=2; out.level=1</tag>
+					<item repeat="0-1">
+						Yah <tag>out.level=2</tag>
+						<item repeat="0-1">
+							Nir <tag>out.level=3</tag>
+						</item>
+					</item>
+				</item>
+			<!-- Become Ethereal -->
+				<item>
+					Become Ethereal <tag>out.id=3; out.level=0</tag>
+				</item>
+				<item>
+					Feim <tag>out.id=3; out.level=1</tag>
+					<item repeat="0-1">
+						Zii <tag>out.level=2</tag>
+						<item repeat="0-1">
+							Gron <tag>out.level=3</tag>
+						</item>
+					</item>
+				</item>
+			<!-- Call Dragon -->
+				<item>
+					Call Dragon <tag>out.id=4; out.level=0</tag>
+				</item>
+				<item>
+					Ode <tag>out.id=4; out.level=1</tag>
+					<item repeat="0-1">
+						Ah <tag>out.level=2</tag>
+						<item repeat="0-1">
+							Viing <tag>out.level=3</tag>
+						</item>
+					</item>
+				</item>
+			<!-- Call of Valor -->
+				<item>
+					Call of Valor <tag>out.id=5; out.level=0</tag>
+				</item>
+				<item>
+					Hun <tag>out.id=5; out.level=1</tag>
+					<item repeat="0-1">
+						Kaal <tag>out.level=2</tag>
+						<item repeat="0-1">
+							Zoor <tag>out.level=3</tag>
+						</item>
+					</item>
+				</item>
+			<!-- Clear Skies -->
+				<item>
+					Clear Skies <tag>out.id=6; out.level=0</tag>
+				</item>
+				<item>
+					Lok <tag>out.id=6; out.level=1</tag>
+					<item repeat="0-1">
+						Vah <tag>out.level=2</tag>
+						<item repeat="0-1">
+							Koor <tag>out.level=3</tag>
+						</item>
+					</item>
+				</item>
+			<!-- Disarm -->
+				<item>
+					Disarm <tag>out.id=7; out.level=0</tag>
+				</item>
+				<item>
+					Zun <tag>out.id=7; out.level=1</tag>
+					<item repeat="0-1">
+						Haal <tag>out.level=2</tag>
+						<item repeat="0-1">
+							Veek <tag>out.level=3</tag>
+						</item>
+					</item>
+				</item>
+			<!-- Dismay -->
+				<item>
+					Dismay <tag>out.id=8; out.level=0</tag>
+				</item>
+				<item>
+					Faas <tag>out.id=8; out.level=1</tag>
+					<item repeat="0-1">
+						Roo <tag>out.level=2</tag>
+						<item repeat="0-1">
+							Maar <tag>out.level=3</tag>
+						</item>
+					</item>
+				</item>
+			<!-- Dragonrend -->
+				<item>
+					Dragonrend <tag>out.id=9; out.level=0</tag>
+				</item>
+				<item>
+					Joor <tag>out.id=9; out.level=1</tag>
+					<item repeat="0-1">
+						Zah <tag>out.level=2</tag>
+						<item repeat="0-1">
+							Frul <tag>out.level=3</tag>
+						</item>
+					</item>
+				</item>
+			<!-- Elemental Fury -->
+				<item>
+					Elemental Fury <tag>out.id=10; out.level=0</tag>
+				</item>
+				<item>
+					Su <tag>out.id=10; out.level=1</tag>
+					<item repeat="0-1">
+						Grah <tag>out.level=2</tag>
+						<item repeat="0-1">
+							Dun <tag>out.level=3</tag>
+						</item>
+					</item>
+				</item>
+			<!-- Fire Breath -->
+				<item>
+					Fire Breath <tag>out.id=11; out.level=0</tag>
+				</item>
+				<item>
+					Yol <tag>out.id=11; out.level=1</tag>
+					<item repeat="0-1">
+						Toor <tag>out.level=2</tag>
+						<item repeat="0-1">
+							Shul <tag>out.level=3</tag>
+						</item>
+					</item>
+				</item>
+			<!-- Frost Breath -->
+				<item>
+					Frost Breath <tag>out.id=12; out.level=0</tag>
+				</item>
+				<item>
+					Fo <tag>out.id=12; out.level=1</tag>
+					<item repeat="0-1">
+						Krah <tag>out.level=2</tag>
+						<item repeat="0-1">
+							Deen <tag>out.level=3</tag>
+						</item>
+					</item>
+				</item>
+			<!-- Ice Form -->
+				<item>
+					Ice Form <tag>out.id=13; out.level=0</tag>
+				</item>
+				<item>
+					Ees <tag>out.id=13; out.level=1</tag>
+					<item repeat="0-1">
+						Slen <tag>out.level=2</tag>
+						<item repeat="0-1">
+							Noos <tag>out.level=3</tag>
+						</item>
+					</item>
+				</item>
+			<!-- Kyne's Peace -->
+				<item>
+					Kyne's Peace <tag>out.id=14; out.level=0</tag>
+				</item>
+				<item>
+					Kaan <tag>out.id=14; out.level=1</tag>
+					<item repeat="0-1">
+						Drem <tag>out.level=2</tag>
+						<item repeat="0-1">
+							Ov <tag>out.level=3</tag>
+						</item>
+					</item>
+				</item>
+			<!-- Marked For Death -->
+				<item>
+					Marked For Death <tag>out.id=15; out.level=0</tag>
+				</item>
+				<item>
+					Kree <tag>out.id=15; out.level=1</tag>
+					<item repeat="0-1">
+						Lun <tag>out.level=2</tag>
+						<item repeat="0-1">
+							Aus <tag>out.level=3</tag>
+						</item>
+					</item>
+				</item>
+			<!-- Slow Time -->
+				<item>
+					Slow Time <tag>out.id=16; out.level=0</tag>
+				</item>
+				<item>
+					Teed <tag>out.id=16; out.level=1</tag>
+					<item repeat="0-1">
+						Klo <tag>out.level=2</tag>
+						<item repeat="0-1">
+							Ool <tag>out.level=3</tag>
+						</item>
+					</item>
+				</item>
+			<!-- Storm Call  -->
+				<item>
+					Storm Call <tag>out.id=17; out.level=0</tag>
+				</item>
+				<item>
+					Strun <tag>out.id=17; out.level=1</tag>
+					<item repeat="0-1">
+						Bah <tag>out.level=2</tag>
+						<item repeat="0-1">
+							Qo <tag>out.level=3</tag>
+						</item>
+					</item>
+				</item>
+			<!-- Throw Voice -->
+				<item>
+					Throw Voice <tag>out.id=18; out.level=0</tag>
+				</item>
+				<item>
+					Zul <tag>out.id=18; out.level=1</tag>
+					<item repeat="0-1">
+						Mey <tag>out.level=2</tag>
+						<item repeat="0-1">
+							Gut <tag>out.level=3</tag>
+						</item>
+					</item>
+				</item>
+			<!-- Unrelenting Force -->
+				<item>
+					Unrelenting Force <tag>out.id=19; out.level=0</tag>
+				</item>
+				<item>
+					Foos <tag>out.id=19; out.level=1</tag>
+					<item repeat="0-1">
+						Ro <tag>out.level=2</tag>
+						<item repeat="0-1">
+							Dah <tag>out.level=3</tag>
+						</item>
+					</item>
+				</item>
+			<!-- Whirlwind Sprint -->
+				<item>
+					Whirlwind Sprint <tag>out.id=20; out.level=0</tag>
+				</item>
+				<item>
+					Wuld <tag>out.id=20; out.level=1</tag>
+					<item repeat="0-1">
+						Nah <tag>out.level=2</tag>
+						<item repeat="0-1">
+							Kest <tag>out.level=3</tag>
+						</item>
+					</item>
+				</item>
 		</one-of>
 	</rule>
 
@@ -419,10 +483,158 @@
 		</one-of>
 	</rule>
 
+	<!--Dawnguard-->
+	<rule id="DawnguardSpellNames">
+		<tag>out.mod=2</tag>
+		<one-of>
+			<item>Conjure Boneman		<tag>out.id=1</tag></item>
+			<item>Conjure Mistman		<tag>out.id=2</tag></item>
+			<item>Conjure Wrathman		<tag>out.id=3</tag></item>
+			<item>Heal Undead			<tag>out.id=4</tag></item>
+			<item>Necromantic Healing	<tag>out.id=5</tag></item>
+			<item>Stendarr's Aura		<tag>out.id=6</tag></item>
+			<item>Summon Arvak			<tag>out.id=7</tag></item>
+			<item>Sun Fire				<tag>out.id=8</tag></item>
+			<item>Vampire's Bane		<tag>out.id=9</tag></item>
+			<!--Vampire Lord-->
+			<item>Corpse Curse			<tag>out.id=10</tag></item>
+			<item>Raise Dead			<tag>out.id=11</tag></item>
+			<item>Summon Gargoyle		<tag>out.id=12</tag></item>
+			<item>Vampiric Grip			<tag>out.id=13</tag></item>
+		</one-of>
+	</rule>
+
+	<rule id="DawnguardShoutNames">
+		<tag>out.mod=2</tag>
+		<one-of>
+			<!-- Drain Vitality -->
+			<item>
+				Drain Vitality <tag>out.id=1; out.level=0</tag>
+			</item>		
+			<item>
+				Gaan <tag>out.id=1; out.level=1</tag>
+				<item repeat="0-1">
+					Lah <tag>out.level=2</tag>
+					<item repeat="0-1">
+						Haas <tag>out.level=3</tag>
+					</item>
+				</item>
+			</item>
+			<!-- Soul Tear -->
+			<item>
+				Soul Tear <tag>out.id=2; out.level=0</tag>
+			</item>	
+			<item>
+				Rii <tag>out.id=2; out.level=1</tag>
+				<item repeat="0-1">
+					Vaaz <tag>out.level=2</tag>
+					<item repeat="0-1">
+						Zol <tag>out.level=3</tag>
+					</item>
+				</item>
+			</item>
+			<!-- Summon Durnehviir -->
+			<item>
+				Summon Durnehviir <tag>out.id=3; out.level=0</tag>
+			</item>	
+			<item>
+				Dur <tag>out.id=3; out.level=1</tag>
+				<item repeat="0-1">
+					Neh <tag>out.level=2</tag>
+					<item repeat="0-1">
+						Veer <tag>out.level=3</tag>
+					</item>
+				</item>
+			</item>
+		</one-of>
+	</rule>
+
 	<rule id="DawnguardPowerNames">
 		<tag>out.mod=2</tag>
 		<one-of>
 			<item>Vampire Form				<tag>out.id=1</tag></item>
+			<item>Bats						<tag>out.id=2</tag></item>
+			<item>Detect All Creatures		<tag>out.id=3</tag></item>
+			<item>Mist Form					<tag>out.id=4</tag></item>
+			<item>Revert Form				<tag>out.id=5</tag></item>
+			<item>Supernatural Reflexes		<tag>out.id=6</tag></item>
+			<item>Vampire's Sight			<tag>out.id=7</tag></item>
+		</one-of>
+	</rule>
+
+	<!--Dragonborn-->
+	<rule id="DragonbornSpellNames">
+		<tag>out.mod=3</tag>
+		<one-of>
+			<item>Ash Rune				<tag>out.id=1</tag></item>
+			<item>Ash Shell				<tag>out.id=2</tag></item>
+			<item>Bound Dagger			<tag>out.id=3</tag></item>
+			<item>Conjure Ash Guardian	<tag>out.id=4</tag></item>
+			<item>Conjure Ash Spawn		<tag>out.id=5</tag></item>
+			<item>Conjure Seeker		<tag>out.id=6</tag></item>
+			<item>Freeze				<tag>out.id=7</tag></item>
+			<item>Frenzy Rune			<tag>out.id=8</tag></item>
+			<item>Ignite				<tag>out.id=9</tag></item>
+			<item>Poison Rune			<tag>out.id=10</tag></item>
+			<item>Whirlwind Cloak		<tag>out.id=11</tag></item>
+		</one-of>
+	</rule>
+
+	<rule id="DragonbornShoutNames">
+		<tag>out.mod=3</tag>
+		<one-of>
+			<!-- Battle Fury -->
+			<item>
+				Battle Fury <tag>out.id=1; out.level=0</tag>
+			</item>		
+			<item>
+				Mid <tag>out.id=1; out.level=1</tag>
+				<item repeat="0-1">
+					Vur <tag>out.level=2</tag>
+					<item repeat="0-1">
+						Shaan <tag>out.level=3</tag>
+					</item>
+				</item>
+			</item>
+			<!-- Bend Will -->
+			<item>
+				Bend Will <tag>out.id=2; out.level=0</tag>
+			</item>		
+			<item>
+				Gol <tag>out.id=2; out.level=1</tag>
+				<item repeat="0-1">
+					Ha <tag>out.level=2</tag>
+					<item repeat="0-1">
+						Dov <tag>out.level=3</tag>
+					</item>
+				</item>
+			</item>
+			<!-- Cyclone -->
+			<item>
+				Cyclone <tag>out.id=3; out.level=0</tag>
+			</item>		
+			<item>
+				Ven <tag>out.id=3; out.level=1</tag>
+				<item repeat="0-1">
+					Gaar <tag>out.level=2</tag>
+					<item repeat="0-1">
+						Nos <tag>out.level=3</tag>
+					</item>
+				</item>
+			</item>
+			<!-- Dragon Aspect -->
+			<item>
+				Dragon Aspect <tag>out.id=4; out.level=0</tag>
+			</item>		
+			<item>
+				Mul <tag>out.id=4; out.level=1</tag>
+				<item repeat="0-1">
+					Qah <tag>out.level=2</tag>
+					<item repeat="0-1">
+						Deev <tag>out.level=3</tag>
+					</item>
+				</item>
+			</item>
 		</one-of>
 	</rule>
 
@@ -449,587 +661,4 @@
 		</one-of>
 	</rule>
 
-	<rule id="VanillaShoutNames">
-		<tag>out.mod=1</tag>
-		<one-of>
-			<!-- Animal Allegiance -->
-			<item>
-				Raan	<tag>out.id=1; out.level=1</tag>
-				<item repeat="0-1">
-					Mir	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Tah	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Aura Whisper -->
-			<item>
-				Laas	<tag>out.id=1; out.level=1</tag>
-				<item repeat="0-1">
-					Yah	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Tah	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Become Ethereal -->
-			<item>
-				Feim	<tag>out.id=1; out.level=1</tag>
-				<item repeat="0-1">
-					Zii	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Tah	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Call Dragon -->
-			<item>
-				Od	<tag>out.id=1; out.level=1</tag>
-				<item repeat="0-1">
-					Ah	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Tah	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Call of Valor -->
-			<item>
-				Hun	<tag>out.id=1; out.level=1</tag>
-				<item repeat="0-1">
-					Kaal	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Tah	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Clear Skies -->
-			<item>
-				Lok	<tag>out.id=1; out.level=1</tag>
-				<item repeat="0-1">
-					Vah	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Tah	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Disarm -->
-			<item>
-				Zun	<tag>out.id=1; out.level=1</tag>
-				<item repeat="0-1">
-					Haal	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Tah	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Dismay -->
-			<item>
-				Faas	<tag>out.id=1; out.level=1</tag>
-				<item repeat="0-1">
-					Ru	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Tah	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Dragonrend -->
-			<item>
-				Joor	<tag>out.id=1; out.level=1</tag>
-				<item repeat="0-1">
-					Zah	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Tah	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Elemental Fury -->
-			<item>
-				Su	<tag>out.id=1; out.level=1</tag>
-				<item repeat="0-1">
-					Grah	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Tah	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Fire Breath -->
-			<item>
-				Yol	<tag>out.id=1; out.level=1</tag>
-				<item repeat="0-1">
-					Toor	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Tah	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Frost Breath -->
-			<item>
-				Fo	<tag>out.id=1; out.level=1</tag>
-				<item repeat="0-1">
-					Krah	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Tah	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Ice Form -->
-			<item>
-				Ees	<tag>out.id=1; out.level=1</tag>
-				<item repeat="0-1">
-					Slen	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Tah	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Kyne's Peace -->
-			<item>
-				Kaan	<tag>out.id=1; out.level=1</tag>
-				<item repeat="0-1">
-					Drem	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Tah	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Marked For Death -->
-			<item>
-				Krii	<tag>out.id=1; out.level=1</tag>
-				<item repeat="0-1">
-					Lun	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Tah	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Slow Time -->
-			<item>
-				Tiid	<tag>out.id=1; out.level=1</tag>
-				<item repeat="0-1">
-					Klo	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Tah	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Storm Call  -->
-			<item>
-				Strun	<tag>out.id=1; out.level=1</tag>
-				<item repeat="0-1">
-					Bah	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Tah	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Throw Voice -->
-			<item>
-				Zul	<tag>out.id=1; out.level=1</tag>
-				<item repeat="0-1">
-					Mey	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Tah	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Unrelenting Force -->
-			<item>
-				Foos	<tag>out.id=1; out.level=1</tag>
-				<item repeat="0-1">
-					Ro	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Tah	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Whirlwind Sprint -->
-			<item>
-				Wuld	<tag>out.id=1; out.level=1</tag>
-				<item repeat="0-1">
-					Nah	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Tah	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-		</one-of>
-	</rule>
-
-	<rule id="DawnguardShoutNames">
-		<tag>out.mod=2</tag>
-		<one-of>
-			<!-- Drain Vitality -->
-			<item>
-				Gaan	<tag>out.id=1; out.level=1</tag>
-				<item repeat="0-1">
-					Lah	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Tah	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Soul Tear -->
-			<item>
-				Rii	<tag>out.id=1; out.level=1</tag>
-				<item repeat="0-1">
-					Vaaz	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Tah	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Summon Durnehviir -->
-			<item>
-				Dur	<tag>out.id=1; out.level=1</tag>
-				<item repeat="0-1">
-					Neh	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Tah	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-		</one-of>
-	</rule>
-
-	<rule id="DragonbornShoutNames">
-		<tag>out.mod=2</tag>
-		<one-of>
-			<!-- Battle Fury -->
-			<item>
-				Mid	<tag>out.id=1; out.level=1</tag>
-				<item repeat="0-1">
-					Vur	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Tah	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Bend Will -->
-			<item>
-				Gol	<tag>out.id=1; out.level=1</tag>
-				<item repeat="0-1">
-					Ha	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Tah	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Cyclone -->
-			<item>
-				Ven	<tag>out.id=1; out.level=1</tag>
-				<item repeat="0-1">
-					Nos	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Tah	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Dragon Aspect -->
-			<item>
-				Mul	<tag>out.id=1; out.level=1</tag>
-				<item repeat="0-1">
-					Qah	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Tah	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-		</one-of>
-	</rule>
-
-	<rule id="ThunderchildShoutNames">
-		<tag>out.mod=1</tag>
-		<one-of>
-			<!-- Alessia's Love -->
-			<item>
-				Joor	<tag>out.id=1; out.level=1</tag>
-				<item repeat="0-1">
-					Drem	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Ov	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Annihilate -->
-			<item>
-				Rii	<tag>out.id=2; out.level=1</tag>
-				<item repeat="0-1">
-					Gaar	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Nos	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Arcane Helix -->
-			<item>
-				Yol	<tag>out.id=3; out.level=1</tag>
-				<item repeat="0-1">
-					Nah	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Kest	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Armageddon -->
-			<item>
-				Wuld	<tag>out.id=4; out.level=1</tag>
-				<item repeat="0-1">
-					Toor	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Shul	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Curse -->
-			<item>
-				Fiik	<tag>out.id=5; out.level=1</tag>
-				<item repeat="0-1">
-					Zii	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Gron	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Dance of the Dead -->
-			<item>
-				Raan	<tag>out.id=6; out.level=1</tag>
-				<item repeat="0-1">
-					Vaaz	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Sol	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Earthquake -->
-			<item>
-				Fus	<tag>out.id=7; out.level=1</tag>
-				<item repeat="0-1">
-					Klo	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Ool	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Essence Rip -->
-			<item>
-				Laas	<tag>out.id=8; out.level=1</tag>
-				<item repeat="0-1">
-					Ro	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Dah	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Evocation -->
-			<item>
-				Ven	<tag>out.id=9; out.level=1</tag>
-				<item repeat="0-1">
-					Lah	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Haas	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Iceborn -->
-			<item>
-				Ees	<tag>out.id=10; out.level=1</tag>
-				<item repeat="0-1">
-					Ah	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Viing	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Jone's Shadow -->
-			<item>
-				Zul	<tag>out.id=11; out.level=1</tag>
-				<item repeat="0-1">
-					Lun	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Aus	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Kingsbane -->
-			<item>
-				Mul	<tag>out.id=12; out.level=1</tag>
-				<item repeat="0-1">
-					Neh	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Viir	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Lifestream -->
-			<item>
-				Gaan	<tag>out.id=13; out.level=1</tag>
-				<item repeat="0-1">
-					Vur	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Shaan	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Lightning Shield -->
-			<item>
-				Strun	<tag>out.id=14; out.level=1</tag>
-				<item repeat="0-1">
-					Slen	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Nus	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Geomagnetism -->
-			<item>
-				Gol	<tag>out.id=15; out.level=1</tag>
-				<item repeat="0-1">
-					Yah	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Nir	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Oblivion -->
-			<item>
-				Dur	<tag>out.id=16; out.level=1</tag>
-				<item repeat="0-1">
-					Hah	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Dov	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Phantom Decoy -->
-			<item>
-				Fiik	<tag>out.id=17; out.level=1</tag>
-				<item repeat="0-1">
-					Lo	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Sah	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Riftwalk -->
-			<item>
-				Su	<tag>out.id=18; out.level=1</tag>
-				<item repeat="0-1">
-					Ru	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Maar	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Shattersphere -->
-			<item>
-				Fo	<tag>out.id=19; out.level=1</tag>
-				<item repeat="0-1">
-					Mey	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Gut	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Shor's Wrath -->
-			<item>
-				Hun	<tag>out.id=20; out.level=1</tag>
-				<item repeat="0-1">
-					Haal	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Viik	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Shroud of Snowfall -->
-			<item>
-				Feim	<tag>out.id=21; out.level=1</tag>
-				<item repeat="0-1">
-					Krah	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Diin	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Speak Unto The Stars -->
-			<item>
-				Tiid	<tag>out.id=22; out.level=1</tag>
-				<item repeat="0-1">
-					Mir	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Tah	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Splinter Twins -->
-			<item>
-				Krii	<tag>out.id=23; out.level=1</tag>
-				<item repeat="0-1">
-					Lo	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Sah	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Stormblast -->
-			<item>
-				Lok	<tag>out.id=24; out.level=1</tag>
-				<item repeat="0-1">
-					Bah	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Qo	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- The Conqueror -->
-			<item>
-				Mid	<tag>out.id=25; out.level=1</tag>
-				<item repeat="0-1">
-					Quah	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Diiv	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Trueshot -->
-			<item>
-				Kaan	<tag>out.id=26; out.level=1</tag>
-				<item repeat="0-1">
-					Grah	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Dun	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Wail of the Banshee -->
-			<item>
-				Faas	<tag>out.id=27; out.level=1</tag>
-				<item repeat="0-1">
-					Zah	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Frul	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Wanderlust -->
-			<item>
-				Ode	<tag>out.id=28; out.level=1</tag>
-				<item repeat="0-1">
-					Vah	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Koor	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-			<!-- Warcry -->
-			<item>
-				Zun	<tag>out.id=29; out.level=1</tag>
-				<item repeat="0-1">
-					Kaal	<tag>out.level=2</tag>
-					<item repeat="0-1">
-						Zoor	<tag>out.level=3</tag>
-					</item>
-				</item>
-			</item>
-		</one-of>
-	</rule>
 </grammar>
