@@ -166,10 +166,10 @@ bool VersionCheck::IsCompatibleExeVersion() {
 
 		#ifdef IS_VR
 			g_SkyrimType = VR;
-			Log::info("This dll is built for SkyrimSE and may not compatible with SkyrimVR.");
+			Log::info("This dll is built for SkyrimVR and may not compatible with SkyrimSE.");
 		#else
 			g_SkyrimType = SE;
-			Log::info("This dll is built for SkyrimVR and may not compatible with SkyrimSE.");
+			Log::info("This dll is built for SkyrimSE and may not compatible with SkyrimVR.");
 		#endif
 	}
 
