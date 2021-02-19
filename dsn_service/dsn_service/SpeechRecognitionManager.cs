@@ -167,7 +167,7 @@ namespace DSN {
             }
         }
 
-        private void StopRecognition() {
+        public void StopRecognition() {
             lock (dsnLock) {
                 try {
                     if (recognitionStatus == STATUS_RECOGNIZING) {

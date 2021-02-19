@@ -22,9 +22,12 @@ namespace DSN {
         private Thread listenThread;
         private BlockingCollection<string> commandQueue;
 
+        private bool dialogueEnabled;
+
         public SkyrimInterop(Configuration config, ConsoleInput consoleInput) {
             this.config = config;
             this.consoleInput = consoleInput;
+            this.dialogueEnabled = (config.Get("Dialogue", "enabled", "1") == "1");
         }
 
         public void Start() {
@@ -101,28 +104,30 @@ namespace DSN {
                     }
 
                     Trace.TraceInformation("Received command: {0}", input);
-
-                    string[] tokens = input.Split('|');
-                    string command = tokens[0];
-                    if (command.Equals("START_DIALOGUE")) {
-                        consoleInput.currentDialogue = input;
-                        lock (dialogueLock) {
-                            currentDialogue = DialogueList.Parse(string.Join("|", tokens, 1, tokens.Length - 1), config);
-                        }
-                        // Switch to dialogue mode
-                        recognizer.StartSpeechRecognition(true, currentDialogue);
-                    } else if (command.Equals("STOP_DIALOGUE")) {
-                        consoleInput.currentDialogue = null;
-                        // Switch to command mode
-                        recognizer.StartSpeechRecognition(false, config.GetConsoleCommandList(), favoritesList);
-                        lock (dialogueLock) {
-                            currentDialogue = null;
-                        }
-                    } else if (command.Equals("FAVORITES")) {
-                        consoleInput.currentFavoritesList = input;
-                        favoritesList.Update(string.Join("|", tokens, 1, tokens.Length - 1));
-                        if(currentDialogue == null) {
+                    lock (dialogueLock) {
+                        string[] tokens = input.Split('|');
+                        string command = tokens[0];
+                        if (command.Equals("START_DIALOGUE")) {
+                            consoleInput.currentDialogue = input;
+                            if (dialogueEnabled) {
+                                currentDialogue = DialogueList.Parse(string.Join("|", tokens, 1, tokens.Length - 1), config);
+                                // Switch to dialogue mode
+                                recognizer.StartSpeechRecognition(true, currentDialogue);
+                            } else {
+                                Trace.TraceInformation("Dialogue was disabled, pause the speech recognition");
+                                recognizer.StopRecognition();
+                            }
+                        } else if (command.Equals("STOP_DIALOGUE")) {
+                            // Switch to command mode
                             recognizer.StartSpeechRecognition(false, config.GetConsoleCommandList(), favoritesList);
+                            currentDialogue = null;
+                            consoleInput.currentDialogue = null;
+                        } else if (command.Equals("FAVORITES")) {
+                            consoleInput.currentFavoritesList = input;
+                            favoritesList.Update(string.Join("|", tokens, 1, tokens.Length - 1));
+                            if(consoleInput.currentDialogue == null) {
+                                recognizer.StartSpeechRecognition(false, config.GetConsoleCommandList(), favoritesList);
+                            }
                         }
                     }
                 }
