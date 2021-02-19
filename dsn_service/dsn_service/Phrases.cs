@@ -18,6 +18,17 @@ namespace DSN {
             return phrase.Trim();
         }
 
+        public static string[] normalize(string[] phrases, Configuration config) {
+            List<string> newPhrases = new List<string>();
+            for (int i=0; i<phrases.Length; i++) {
+                string phrase = normalize(phrases[i], config);
+                if (phrase.Length > 0) {
+                    newPhrases.Add(phrase);
+                }
+            }
+            return newPhrases.ToArray();
+        }
+
         public static void appendPhrase(GrammarBuilder builder, string phrase, Configuration config, bool isSubsetMatchingEnabled = false) {
             var optionalExpression = config.GetOptionalExpression();
             var optionalReplacement = "\0" + config.GetOptionalReplacement() + "\0";

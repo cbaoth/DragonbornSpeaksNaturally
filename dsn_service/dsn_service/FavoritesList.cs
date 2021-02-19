@@ -52,15 +52,11 @@ namespace DSN {
                 Trace.TraceInformation("Known Equipment Types: \"{0}\"", string.Join("\", \"", knownEquipmentTypes.ToArray()));
             }
 
-            leftHandSuffix = config.Get("Favorites", "equipLeftSuffix", "left")
-                .Split(';').Select((x) => Phrases.normalize(x, config)).ToArray();
-            rightHandSuffix = config.Get("Favorites", "equipRightSuffix", "right")
-                .Split(';').Select((x) => Phrases.normalize(x, config)).ToArray();
-            bothHandsSuffix = config.Get("Favorites", "equipBothSuffix", "both")
-                .Split(';').Select((x) => Phrases.normalize(x, config)).ToArray();
+            leftHandSuffix = Phrases.normalize(config.Get("Favorites", "equipLeftSuffix", "left").Split(';'), config);
+            rightHandSuffix = Phrases.normalize(config.Get("Favorites", "equipRightSuffix", "right").Split(';'), config);
+            bothHandsSuffix = Phrases.normalize(config.Get("Favorites", "equipBothSuffix", "both").Split(';'), config);
 
-            equipPhrasePrefix = config.Get("Favorites", "equipPhrasePrefix", "equip")
-                .Split(';').Select((x) => Phrases.normalize(x, config)).ToArray();
+            equipPhrasePrefix = Phrases.normalize(config.Get("Favorites", "equipPhrasePrefix", "equip").Split(';'), config);
 
             omitHandSuffix = config.Get("Favorites", "omitHandSuffix", "0") == "1";
 
@@ -117,8 +113,6 @@ namespace DSN {
 
         public void BuildAndAddGrammar(string[] equipPrefix, string phrase, string command, bool isSingleHanded)
         {
-            Choices equipPrefixChoice = new Choices(equipPrefix.ToArray());
-
             List<string> handsSuffix = new List<string>();
             handsSuffix.AddRange(bothHandsSuffix);
             handsSuffix.AddRange(rightHandSuffix);
@@ -128,17 +122,21 @@ namespace DSN {
             GrammarBuilder grammarBuilder = new GrammarBuilder();
 
             // Append hand choice prefix
-            if (isSingleHanded && useEquipHandPrefix)
+            if (isSingleHanded && useEquipHandPrefix && handsSuffix.Count > 0)
             {
                 // Optional left/right. When excluded, try to equip to both hands
                 grammarBuilder.Append(handChoice, 0, 1);
             }
 
-            grammarBuilder.Append(equipPrefixChoice, omitHandSuffix ? 0 : 1, 1);
+            if (equipPrefix.Length > 0) {
+                Choices equipPrefixChoice = new Choices(equipPrefix.ToArray());
+                grammarBuilder.Append(equipPrefixChoice, omitHandSuffix ? 0 : 1, 1);
+            }
+
             Phrases.appendPhrase(grammarBuilder, phrase, config);
 
             // Append hand choice suffix
-            if (isSingleHanded && !useEquipHandPrefix)
+            if (isSingleHanded && !useEquipHandPrefix && handsSuffix.Count > 0)
             {
                 // Optional left/right. When excluded, try to equip to both hands
                 grammarBuilder.Append(handChoice, 0, 1);
