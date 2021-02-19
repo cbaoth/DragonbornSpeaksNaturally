@@ -18,6 +18,7 @@ namespace DSN {
         private Dictionary<Grammar, string> commandsByGrammar;
 
         private bool enabled;
+        private bool leftHandMode;
         private bool useEquipHandPrefix;
         private bool useEquipHandInfix;
         private bool useEquipHandSuffix;
@@ -38,6 +39,7 @@ namespace DSN {
             commandsByGrammar = new Dictionary<Grammar, string>();
 
             enabled = config.Get("Favorites", "enabled", "0") == "1";
+            leftHandMode = config.Get("Favorites", "leftHandMode", "0") == "1";
             useEquipHandPrefix = config.Get("Favorites", "useEquipHandPrefix", "1") == "1";
             useEquipHandInfix = config.Get("Favorites", "useEquipHandInfix", "1") == "1";
             useEquipHandSuffix = config.Get("Favorites", "useEquipHandSuffix", "1") == "1";
@@ -59,6 +61,13 @@ namespace DSN {
             leftHandSuffix = Phrases.normalize(config.Get("Favorites", "equipLeftSuffix", "off;left").Split(';'), config);
             rightHandSuffix = Phrases.normalize(config.Get("Favorites", "equipRightSuffix", "main;right").Split(';'), config);
             bothHandsSuffix = Phrases.normalize(config.Get("Favorites", "equipBothSuffix", "both").Split(';'), config);
+
+            if (leftHandMode) {
+                // SkyrimVR's left-hand mode is enabled, swap the definitions of the left and right hand
+                string[] tmp = leftHandSuffix;
+                leftHandSuffix = rightHandSuffix;
+                rightHandSuffix = tmp;
+            }
 
             equipPhrasePrefix = Phrases.normalize(config.Get("Favorites", "equipPhrasePrefix", "equip;wear;use").Split(';'), config);
 
