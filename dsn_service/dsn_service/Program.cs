@@ -10,6 +10,7 @@ namespace DSN {
             try
             {
                 Log.Initialize();
+                Trace.TraceInformation("\n\n********************************************************************************************************************\n");
                 Trace.TraceInformation("DragonbornSpeaksNaturally ({0}) speech recognition service started", VERSION);
 
                 for (int i = 0; i < args.Length; i++)
