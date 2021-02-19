@@ -9,7 +9,7 @@
 #include "VersionCheck.h"
 #include "SkyrimType.h"
 
-static const char* VERSION = "0.20.2";
+static const char* VERSION = "0.21.0";
 
 extern std::string g_dllPath("");
 extern void * g_moduleHandle = nullptr;
