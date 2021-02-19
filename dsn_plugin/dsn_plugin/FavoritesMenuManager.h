@@ -24,7 +24,7 @@ struct EquipItem {
 	UInt32 TESFormId;
 	SInt32 itemId;
 	UInt8 itemType;
-	SInt32 hand; // 0 = no hand specified, 1 = right hand, 2 = left hand
+	SInt32 hand; // 0 = both, 1 = right hand, 2 = left hand
 };
 
 class FavoritesMenuManager

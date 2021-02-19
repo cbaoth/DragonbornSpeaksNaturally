@@ -217,7 +217,7 @@ EquipItem parseEquipItem(std::string command) {
 
 enum
 {
-	kSlotId_Default = 0,
+	kSlotId_Both = 0,
 	kSlotId_Right = 1,
 	kSlotId_Left = 2
 };
@@ -232,20 +232,25 @@ void FavoritesMenuManager::ProcessEquipCommands() {
 	if (player && equipManager && equipStr != "") {
 		EquipItem equipItem = parseEquipItem(equipStr);
 		TESForm * form = LookupFormByID(equipItem.TESFormId);
-		std::string hand = equipItem.hand == 1 ? "right" : "left";
 		if (form) {
 			std::stringstream formIdAsHex;
 
 			switch (equipItem.itemType) {
 			case 1: // Item
-				Equipper::EquipItem(player, form, equipItem.itemId, equipItem.hand);
+				if (equipItem.hand == kSlotId_Both) {
+					Equipper::EquipItem(player, form, equipItem.itemId, kSlotId_Right);
+					Equipper::EquipItem(player, form, equipItem.itemId, kSlotId_Left);
+				} else {
+					Equipper::EquipItem(player, form, equipItem.itemId, equipItem.hand);
+				}
 				break;
 			case 2: // Spell
 				formIdAsHex << std::hex << equipItem.TESFormId;
-				if (equipItem.hand == 0) {
+				if (equipItem.hand == kSlotId_Both) {
 					client->EnqueueCommand("player.equipspell " + formIdAsHex.str() + " left");
 					client->EnqueueCommand("player.equipspell " + formIdAsHex.str() + " right");
 				} else {
+					std::string hand = equipItem.hand == 1 ? "right" : "left";
 					client->EnqueueCommand("player.equipspell " + formIdAsHex.str() + " " + hand);
 				}
 				break;
