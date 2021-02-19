@@ -59,15 +59,10 @@ namespace DSN {
             bothHandsSuffix = config.Get("Favorites", "equipBothSuffix", "both")
                 .Split(';').Select((x) => Phrases.normalize(x, config)).ToArray();
 
-            List<string> equipPrefixList = config.Get("Favorites", "equipPhrasePrefix", "equip")
-                .Split(';').Select((x) => Phrases.normalize(x, config)).ToList();
-            for (int i=equipPrefixList.Count-1; i>=0; i--) {
-                if (equipPrefixList[i].Length == 0) {
-                    equipPrefixList.RemoveAt(i);
-                    omitHandSuffix = true;
-                }
-            }
-            equipPhrasePrefix = equipPrefixList.ToArray();
+            equipPhrasePrefix = config.Get("Favorites", "equipPhrasePrefix", "equip")
+                .Split(';').Select((x) => Phrases.normalize(x, config)).ToArray();
+
+            omitHandSuffix = config.Get("Favorites", "omitHandSuffix", "0") == "1";
 
             mainHand = config.Get("Favorites", "mainHand", "none");
 
