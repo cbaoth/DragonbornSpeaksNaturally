@@ -47,10 +47,8 @@ namespace DSN {
                     } else {
                         builder.Append(part);
                     }
-                    //Trace.TraceInformation("no op exp: {1}", i, part);
                 } else {
                     builder.Append(part, 0, 1);
-                    //Trace.TraceInformation("op exp: {1}", i, part);
                 }
             }
         }

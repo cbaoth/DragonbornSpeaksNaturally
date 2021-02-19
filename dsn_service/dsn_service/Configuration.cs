@@ -30,8 +30,9 @@ namespace DSN {
             // Relieve users' trouble of renaming if the extension ".json" hidden
             "item-name-map.json.json"
         };
-        
-        private static readonly SubsetMatchingMode DEFAULT_GRAMMAR_MATCHING_MODE = SubsetMatchingMode.OrderedSubsetContentRequired;
+
+        private static readonly SubsetMatchingMode INIT_GRAMMAR_MATCHING_MODE = SubsetMatchingMode.SubsequenceContentRequired;
+        private static readonly string DEFAULT_GRAMMAR_MATCHING_MODE = "None";
 
         // Double quotes are not allowed in the speech recognition engine.
         // About "(?<![a-zA-Z])'":
@@ -41,8 +42,8 @@ namespace DSN {
         private static readonly string DEFAULT_NORMALIZE_EXPRESSION = @"(?:""|\s+|(?<![a-zA-Z])')";
         private static readonly string DEFAULT_NORMALIZE_REPLACEMENT = @" ";
 
-        private static readonly string DEFAULT_OPTIONAL_EXPRESSION = @"(?:\(([^)]*)\)|\[([^\]]*)\]|{([^}]*)}|<([^>]*)>)";
-        private static readonly string DEFAULT_OPTIONAL_REPLACEMENT = @"$1$2$3$4";
+        private static readonly string DEFAULT_OPTIONAL_EXPRESSION = @"(?:\(([^)]*)\)|\[([^\]]*)\]|{([^}]*)}|<([^>]*)>|（([^）]*)）|【([^】]*)】|〈([^〉]*)〉|﹝([^﹞]*)﹞|〔([^〕]*)〕)";
+        private static readonly string DEFAULT_OPTIONAL_REPLACEMENT = @"$1$2$3$4$5$6$7$8$9";
 
         // NOTE: Relative to SkyrimVR.exe
         private readonly string[] SEARCH_DIRECTORIES = {
@@ -66,7 +67,7 @@ namespace DSN {
         private List<string> resumePhrases = null;
         private CommandList consoleCommandList = null;
         private bool enableDialogueSubsetMatching = true;
-        private SubsetMatchingMode configuredMatchingMode = DEFAULT_GRAMMAR_MATCHING_MODE;
+        private SubsetMatchingMode configuredMatchingMode = INIT_GRAMMAR_MATCHING_MODE;
 
         private Regex normalizeExpression = null;
         private string normalizeReplacement = "";
@@ -85,19 +86,22 @@ namespace DSN {
             merged.Merge(global);
             merged.Merge(local);
 
-            string matchingMode = Get("Dialogue", "SubsetMatchingMode", Enum.GetName(typeof(SubsetMatchingMode), DEFAULT_GRAMMAR_MATCHING_MODE));
+            string matchingMode = Get("Dialogue", "SubsetMatchingMode", DEFAULT_GRAMMAR_MATCHING_MODE);
             try {
-                if (matchingMode.ToLower() == "none") {
+                if (matchingMode.ToLower() == "none" || matchingMode.ToLower() == "") {
+                    configuredMatchingMode = INIT_GRAMMAR_MATCHING_MODE;
                     enableDialogueSubsetMatching = false;
                     Trace.TraceInformation("Dialogue SubsetMatchingMode Disabled");
                 } else {
                     configuredMatchingMode = (SubsetMatchingMode)Enum.Parse(typeof(SubsetMatchingMode), matchingMode, true);
+                    enableDialogueSubsetMatching = true;
                     Trace.TraceInformation("Set Dialogue SubsetMatchingMode to {0}", configuredMatchingMode);
                 }
             } catch (Exception ex) {
-                Trace.TraceError("Failed to parse SubsetMatchingMode from ini file, falling back to default");
+                configuredMatchingMode = INIT_GRAMMAR_MATCHING_MODE;
+                enableDialogueSubsetMatching = false;
+                Trace.TraceError("Failed to parse SubsetMatchingMode from ini file, dialogue SubsetMatchingMode disabled");
                 Trace.TraceError(ex.ToString());
-                configuredMatchingMode = DEFAULT_GRAMMAR_MATCHING_MODE;
             }
 
             goodbyePhrases = getPhrases("Dialogue", "goodbyePhrases");
