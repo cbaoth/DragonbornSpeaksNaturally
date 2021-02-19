@@ -15,10 +15,16 @@ using System.Threading.Tasks;
 namespace DSN {
 
     class Configuration {
+        public static readonly string WORKING_DIR = Directory.GetCurrentDirectory();
         public static readonly string MY_DOCUMENT_DSN_DIR = System.Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\DragonbornSpeaksNaturally\\";
         public static readonly string ERROR_LOG_FILE = "DragonbornSpeaksNaturally.log";
 
-        private static readonly string CONFIG_FILE_NAME = "DragonbornSpeaksNaturally.ini";
+        private static readonly string[] CONFIG_FILE_NAMES = {
+            "DragonbornSpeaksNaturally.ini",
+            // Relieve users' trouble of renaming if the extension ".ini" hidden
+            "DragonbornSpeaksNaturally.ini.ini"
+        };
+        
         private static readonly SubsetMatchingMode DEFAULT_GRAMMAR_MATCHING_MODE = SubsetMatchingMode.OrderedSubsetContentRequired;
 
         // Double quotes are not allowed in the speech recognition engine.
@@ -34,8 +40,8 @@ namespace DSN {
 
         // NOTE: Relative to SkyrimVR.exe
         private readonly string[] SEARCH_DIRECTORIES = {
-            "Data\\Plugins\\Sumwunn\\",
-            "",
+            WORKING_DIR + "\\Data\\Plugins\\Sumwunn\\",
+            WORKING_DIR + "\\",
             MY_DOCUMENT_DSN_DIR
         };
 
@@ -64,7 +70,7 @@ namespace DSN {
         private CultureInfo locale = CultureInfo.InstalledUICulture;
 
         public Configuration() {
-            iniFilePath = resolveFilePath(CONFIG_FILE_NAME);
+            iniFilePath = resolveOneOfFilePath(CONFIG_FILE_NAMES);
 
             loadLocal();
             loadGlobal();
@@ -203,9 +209,20 @@ namespace DSN {
         public string resolveFilePath(string filename) {
             foreach (string directory in SEARCH_DIRECTORIES) {
                 string filepath = directory + filename;
-                Trace.TraceInformation("filepath: " + filepath);
                 if (File.Exists(filepath)) {
+                    Trace.TraceInformation("filepath found: " + filepath);
                     return Path.GetFullPath(filepath); ;
+                }
+                Trace.TraceInformation("filepath not found: " + filepath);
+            }
+            return null;
+        }
+
+        public string resolveOneOfFilePath(string[] filenames) {
+            foreach (string filename in filenames) {
+                string filepath = resolveFilePath(filename);
+                if (filepath != null) {
+                    return filepath;
                 }
             }
             return null;
