@@ -19,6 +19,8 @@ namespace DSN {
 
         private bool enabled;
         private bool useEquipHandPrefix;
+        private bool useEquipHandInfix;
+        private bool useEquipHandSuffix;
 
         private bool omitHandSuffix = false;
         private string[] equipPhrasePrefix;
@@ -36,7 +38,9 @@ namespace DSN {
             commandsByGrammar = new Dictionary<Grammar, string>();
 
             enabled = config.Get("Favorites", "enabled", "1") == "1";
-            useEquipHandPrefix = config.Get("Favorites", "useEquipHandPrefix", "0") == "1";
+            useEquipHandPrefix = config.Get("Favorites", "useEquipHandPrefix", "1") == "1";
+            useEquipHandInfix = config.Get("Favorites", "useEquipHandInfix", "1") == "1";
+            useEquipHandSuffix = config.Get("Favorites", "useEquipHandSuffix", "1") == "1";
 
             knownEquipmentTypes = config.Get("Favorites", "knownEquipmentTypes", DEFAULT_KNOWN_EQUIPMENT_TYPES)
                 .Split(';').Select((x) => x.ToLower()).ToList();
@@ -133,10 +137,16 @@ namespace DSN {
                 grammarBuilder.Append(equipPrefixChoice, omitHandSuffix ? 0 : 1, 1);
             }
 
+            // Append hand choice infix
+            if (isSingleHanded && useEquipHandInfix && handsSuffix.Count > 0) {
+                // Optional left/right. When excluded, try to equip to both hands
+                grammarBuilder.Append(handChoice, 0, 1);
+            }
+
             Phrases.appendPhrase(grammarBuilder, phrase, config);
 
             // Append hand choice suffix
-            if (isSingleHanded && !useEquipHandPrefix && handsSuffix.Count > 0)
+            if (isSingleHanded && useEquipHandSuffix && handsSuffix.Count > 0)
             {
                 // Optional left/right. When excluded, try to equip to both hands
                 grammarBuilder.Append(handChoice, 0, 1);
@@ -232,14 +242,12 @@ namespace DSN {
             }
         }
 
-        private bool hasPrefixOrSuffix(string text, string[] prefixOrSuffixArray) {
-            //
-            // NOTICE: Some languages (such as Chinese) don't add spaces between words.
-            // So the code such as `result.Text.Split(' ').Last()` will not work for them.
-            // Be aware of this when changing the code below.
-            //
-            foreach (string prefixOrSuffix in prefixOrSuffixArray) {
-                if (useEquipHandPrefix ? text.StartsWith(prefixOrSuffix) : text.EndsWith(prefixOrSuffix)) {
+        private bool hasSuffix(string text, string[] suffixArray) {
+            foreach (string suffix in suffixArray) {
+                // NOTICE: Some languages (such as Chinese) don't add spaces between words.
+                // So the code such as `result.Text.Split(' ').Last()` will not work for them.
+                // Be aware of this when changing the code below.
+                if (text.Contains(suffix)) {
                     return true;
                 }
             }
@@ -257,11 +265,11 @@ namespace DSN {
                 // So the code such as `result.Text.Split(' ').Last()` will not work for them.
                 // Be aware of this when changing the code below.
                 //
-                if (hasPrefixOrSuffix(result.Text, bothHandsSuffix)) {
+                if (hasSuffix(result.Text, bothHandsSuffix)) {
                     command += "0";
-                } else if(hasPrefixOrSuffix(result.Text, rightHandSuffix)) {
+                } else if(hasSuffix(result.Text, rightHandSuffix)) {
                     command += "1";
-                } else if (hasPrefixOrSuffix(result.Text, leftHandSuffix)) {
+                } else if (hasSuffix(result.Text, leftHandSuffix)) {
                     command += "2";
                 } else {
                     // The user didn't ask for a specific hand, supply a default
