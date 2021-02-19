@@ -18,7 +18,12 @@ namespace DSN {
         private Dictionary<Grammar, string> commandsByGrammar;
 
         private bool enabled;
+
         private bool leftHandMode;
+        private string LEFT_HAND_ID;
+        private string RIGHT_HAND_ID;
+        private string BOTH_HAND_ID;
+
         private bool useEquipHandPrefix;
         private bool useEquipHandInfix;
         private bool useEquipHandSuffix;
@@ -31,8 +36,9 @@ namespace DSN {
         private string[] rightHandSuffix;
         private string[] bothHandsSuffix;
 
-        private string mainHand;
         private string mainHandId;
+        private string spellMainHandId;
+        private string weaponMainHandId;
 
         public FavoritesList(Configuration config) {
             this.config = config;
@@ -63,17 +69,35 @@ namespace DSN {
             bothHandsSuffix = Phrases.normalize(config.Get("Favorites", "equipBothSuffix", "both").Split(';'), config);
 
             if (leftHandMode) {
-                // SkyrimVR's left-hand mode is enabled, swap the definitions of the left and right hand
-                string[] tmp = leftHandSuffix;
-                leftHandSuffix = rightHandSuffix;
-                rightHandSuffix = tmp;
+                LEFT_HAND_ID = "1";
+                RIGHT_HAND_ID = "2";
+            } else {
+                LEFT_HAND_ID = "2";
+                RIGHT_HAND_ID = "1";
             }
+            BOTH_HAND_ID = "0";
 
             equipPhrasePrefix = Phrases.normalize(config.Get("Favorites", "equipPhrasePrefix", "equip;wear;use").Split(';'), config);
 
             omitHandSuffix = config.Get("Favorites", "omitHandSuffix", "0") == "1";
 
-            mainHand = config.Get("Favorites", "mainHand", "right");
+            string mainHand = config.Get("Favorites", "mainHand", "right");
+            mainHandId = getMainHandId(mainHand);
+
+            string spellMainHand = config.Get("Favorites", "spellMainHand", "");
+            if (spellMainHand != "") {
+                spellMainHandId = getMainHandId(spellMainHand);
+            }
+
+            string weaponMainHand = config.Get("Favorites", "weaponMainHand", "");
+            if (weaponMainHand != "") {
+                weaponMainHandId = getMainHandId(weaponMainHand);
+            }
+        }
+
+        private string getMainHandId(string mainHand) {
+            // Equipped with right hand by default.
+            string id = RIGHT_HAND_ID;
 
             // Determine the main hand used when user didn't ask for a specific hand.
             //
@@ -83,21 +107,19 @@ namespace DSN {
                 // Comment of `mainHand` in `DragonbornSpeaksNaturally.SAMPLE.ini` said:
                 // > Valid values are "right", "left", "both"
                 // We should keep the compatibility to prevent user confusion.
-                ["both"] = "0",
-                ["right"] = "1",
-                ["left"] = "2"
+                ["left"] = LEFT_HAND_ID,
+                ["right"] = RIGHT_HAND_ID,
+                ["both"] = BOTH_HAND_ID
             };
             // Use assignment statements to avoid key conflicts.
-            bothHandsSuffix.Select((x) => mainHandMap[x] = "0");
-            rightHandSuffix.Select((x) => mainHandMap[x] = "1");
-            leftHandSuffix.Select((x) => mainHandMap[x] = "2");
+            foreach (string x in leftHandSuffix) { mainHandMap[x] = LEFT_HAND_ID; }
+            foreach (string x in rightHandSuffix) { mainHandMap[x] = RIGHT_HAND_ID; }
+            foreach (string x in bothHandsSuffix) { mainHandMap[x] = BOTH_HAND_ID; }
 
             if (mainHandMap.ContainsKey(mainHand)) {
-                mainHandId = mainHandMap[mainHand];
-            } else {
-                // User does not specify the main hand. Equipped with right hand by default.
-                mainHandId = "1";
+                id = mainHandMap[mainHand];
             }
+            return id;
         }
 
         public string ProbableEquipmentType(string itemName)
@@ -275,14 +297,19 @@ namespace DSN {
                 // Be aware of this when changing the code below.
                 //
                 if (hasSuffix(result.Text, bothHandsSuffix)) {
-                    command += "0";
+                    command += BOTH_HAND_ID;
                 } else if(hasSuffix(result.Text, rightHandSuffix)) {
-                    command += "1";
+                    command += RIGHT_HAND_ID;
                 } else if (hasSuffix(result.Text, leftHandSuffix)) {
-                    command += "2";
-                } else {
-                    // The user didn't ask for a specific hand, supply a default
-                    command += mainHandId;
+                    command += LEFT_HAND_ID;
+                } else { // The user didn't ask for a specific hand, supply a default
+                    if (spellMainHandId != null && command.EndsWith(";2;")) {
+                        command += spellMainHandId;
+                    } else if (weaponMainHandId != null && command.EndsWith(";1;")) {
+                        command += weaponMainHandId;
+                    } else {
+                        command += mainHandId;
+                    }
                 }
 
                 return command;
