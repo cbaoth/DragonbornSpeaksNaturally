@@ -26,7 +26,7 @@ namespace DSN {
                     }
                     Grammar grammar;
                     if (value[0] == '@') {
-                        string path = config.resolveFilePath(value.Substring(1));
+                        string path = config.ResolveFilePath(value.Substring(1));
                         if (path == null) {
                             Trace.TraceError("Cannot find the SRGS XML file '{0}', key: {1}", value.Substring(1), key.KeyName);
                             continue;

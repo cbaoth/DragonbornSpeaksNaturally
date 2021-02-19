@@ -158,8 +158,8 @@ namespace DSN {
         // Returns dynamic map/dictionary or null when the replacement map files cannot be located
         public dynamic LoadItemNameMap()
         {
-            string filepath = config.resolveFilePath("item-name-map.json");
-            if(File.Exists(filepath))
+            string filepath = config.GetItemNameMap();
+            if(filepath != null)
             {
                 return LoadItemNameMap(filepath);
             }

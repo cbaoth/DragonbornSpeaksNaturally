@@ -24,6 +24,12 @@ namespace DSN {
             // Relieve users' trouble of renaming if the extension ".ini" hidden
             "DragonbornSpeaksNaturally.ini.ini"
         };
+
+        private static readonly string[] ITEM_NAME_MAPS = {
+            "item-name-map.json",
+            // Relieve users' trouble of renaming if the extension ".json" hidden
+            "item-name-map.json.json"
+        };
         
         private static readonly SubsetMatchingMode DEFAULT_GRAMMAR_MATCHING_MODE = SubsetMatchingMode.OrderedSubsetContentRequired;
 
@@ -70,7 +76,7 @@ namespace DSN {
         private CultureInfo locale = CultureInfo.InstalledUICulture;
 
         public Configuration() {
-            iniFilePath = resolveOneOfFilePath(CONFIG_FILE_NAMES);
+            iniFilePath = ResolveFilePath(CONFIG_FILE_NAMES);
 
             loadLocal();
             loadGlobal();
@@ -196,6 +202,10 @@ namespace DSN {
             return locale;
         }
 
+        public string GetItemNameMap() {
+            return ResolveFilePath(ITEM_NAME_MAPS);
+        }
+
         private void loadGlobal() {
             global = new IniData();
         }
@@ -206,7 +216,7 @@ namespace DSN {
                 local = new IniData();
         }
 
-        public string resolveFilePath(string filename) {
+        public string ResolveFilePath(string filename) {
             foreach (string directory in SEARCH_DIRECTORIES) {
                 string filepath = directory + filename;
                 if (File.Exists(filepath)) {
@@ -218,9 +228,9 @@ namespace DSN {
             return null;
         }
 
-        public string resolveOneOfFilePath(string[] filenames) {
+        public string ResolveFilePath(string[] filenames) {
             foreach (string filename in filenames) {
-                string filepath = resolveFilePath(filename);
+                string filepath = ResolveFilePath(filename);
                 if (filepath != null) {
                     return filepath;
                 }
