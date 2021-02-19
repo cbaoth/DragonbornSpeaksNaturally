@@ -86,9 +86,9 @@ namespace DSN {
             merged.Merge(global);
             merged.Merge(local);
 
-            string matchingMode = Get("Dialogue", "SubsetMatchingMode", DEFAULT_GRAMMAR_MATCHING_MODE);
+            string matchingMode = Get("Dialogue", "SubsetMatchingMode", DEFAULT_GRAMMAR_MATCHING_MODE).Trim();
             try {
-                if (matchingMode.ToLower() == "none" || matchingMode.ToLower() == "") {
+                if (matchingMode.ToLower() == "none" || matchingMode == "" || matchingMode == "0") {
                     configuredMatchingMode = INIT_GRAMMAR_MATCHING_MODE;
                     enableDialogueSubsetMatching = false;
                     Trace.TraceInformation("Dialogue SubsetMatchingMode Disabled");
