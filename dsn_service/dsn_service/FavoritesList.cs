@@ -37,7 +37,7 @@ namespace DSN {
             this.config = config;
             commandsByGrammar = new Dictionary<Grammar, string>();
 
-            enabled = config.Get("Favorites", "enabled", "1") == "1";
+            enabled = config.Get("Favorites", "enabled", "0") == "1";
             useEquipHandPrefix = config.Get("Favorites", "useEquipHandPrefix", "1") == "1";
             useEquipHandInfix = config.Get("Favorites", "useEquipHandInfix", "1") == "1";
             useEquipHandSuffix = config.Get("Favorites", "useEquipHandSuffix", "1") == "1";
@@ -56,15 +56,15 @@ namespace DSN {
                 Trace.TraceInformation("Known Equipment Types: \"{0}\"", string.Join("\", \"", knownEquipmentTypes.ToArray()));
             }
 
-            leftHandSuffix = Phrases.normalize(config.Get("Favorites", "equipLeftSuffix", "left").Split(';'), config);
-            rightHandSuffix = Phrases.normalize(config.Get("Favorites", "equipRightSuffix", "right").Split(';'), config);
+            leftHandSuffix = Phrases.normalize(config.Get("Favorites", "equipLeftSuffix", "off;left").Split(';'), config);
+            rightHandSuffix = Phrases.normalize(config.Get("Favorites", "equipRightSuffix", "main;right").Split(';'), config);
             bothHandsSuffix = Phrases.normalize(config.Get("Favorites", "equipBothSuffix", "both").Split(';'), config);
 
-            equipPhrasePrefix = Phrases.normalize(config.Get("Favorites", "equipPhrasePrefix", "equip").Split(';'), config);
+            equipPhrasePrefix = Phrases.normalize(config.Get("Favorites", "equipPhrasePrefix", "equip;wear;use").Split(';'), config);
 
             omitHandSuffix = config.Get("Favorites", "omitHandSuffix", "0") == "1";
 
-            mainHand = config.Get("Favorites", "mainHand", "none");
+            mainHand = config.Get("Favorites", "mainHand", "right");
 
             // Determine the main hand used when user didn't ask for a specific hand.
             //
@@ -86,8 +86,8 @@ namespace DSN {
             if (mainHandMap.ContainsKey(mainHand)) {
                 mainHandId = mainHandMap[mainHand];
             } else {
-                // User does not specify the main hand. Equipped with both hands by default.
-                mainHandId = "0";
+                // User does not specify the main hand. Equipped with right hand by default.
+                mainHandId = "1";
             }
         }
 
