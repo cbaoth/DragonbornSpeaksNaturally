@@ -14,6 +14,11 @@ using System.Threading.Tasks;
 
 namespace DSN {
 
+    enum RecognitionEngine {
+        Microsoft,
+        Voice2Json
+    }
+
     class Configuration {
         public static readonly string WORKING_DIR = Directory.GetCurrentDirectory();
         public static readonly string MY_DOCUMENT_DSN_DIR = System.Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "\\DragonbornSpeaksNaturally\\";
@@ -68,6 +73,7 @@ namespace DSN {
         private CommandList consoleCommandList = null;
         private bool enableDialogueSubsetMatching = true;
         private SubsetMatchingMode configuredMatchingMode = INIT_GRAMMAR_MATCHING_MODE;
+        private RecognitionEngine recognitionEngine = RecognitionEngine.Microsoft;
 
         private Regex normalizeExpression = null;
         private string normalizeReplacement = "";
@@ -102,6 +108,11 @@ namespace DSN {
                 enableDialogueSubsetMatching = false;
                 Trace.TraceError("Failed to parse SubsetMatchingMode from ini file, dialogue SubsetMatchingMode disabled");
                 Trace.TraceError(ex.ToString());
+            }
+
+            string engine = Get("SpeechRecognition", "Engine", "").Trim().ToLower();
+            if (engine == "voice2json") {
+                recognitionEngine = RecognitionEngine.Voice2Json;
             }
 
             goodbyePhrases = getPhrases("Dialogue", "goodbyePhrases");
@@ -182,8 +193,12 @@ namespace DSN {
             return enableDialogueSubsetMatching;
         }
 
-        public SubsetMatchingMode getConfiguredMatchingMode() {
+        public SubsetMatchingMode GetConfiguredMatchingMode() {
             return configuredMatchingMode;
+        }
+
+        public RecognitionEngine GetRecognitionEngine() {
+            return recognitionEngine;
         }
 
         public Regex GetOptionalExpression() {

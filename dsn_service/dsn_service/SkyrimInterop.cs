@@ -34,7 +34,16 @@ namespace DSN {
             try {
                 favoritesList = new FavoritesList(config);
                 commandQueue = new BlockingCollection<string>();
-                recognizer = new SpeechRecognitionManager(config);
+
+                switch (config.GetRecognitionEngine()) {
+                    case RecognitionEngine.Voice2Json:
+                        recognizer = new Voice2JsonSpeechRecognition(config);
+                        break;
+                    case RecognitionEngine.Microsoft:
+                    default:
+                        recognizer = new MicrosoftSpeechRecognition(config);
+                        break;
+                }
                 recognizer.OnDialogueLineRecognized += Recognizer_OnDialogueLineRecognized;
 
                 // Start in command-mode
@@ -136,25 +145,23 @@ namespace DSN {
             }
         }
 
-        private void Recognizer_OnDialogueLineRecognized(RecognitionResult result) {
-            string line = result.Text;
-
+        private void Recognizer_OnDialogueLineRecognized(string text, Grammar grammar, string semantics) {
             lock (dialogueLock) {
                 if (currentDialogue != null) {
-                    int idx = currentDialogue.GetLineIndex(result.Grammar);
+                    int idx = currentDialogue.GetLineIndex(grammar);
                     if (idx != -1) {
                         SubmitCommand("DIALOGUE|" + currentDialogue.id + "|" + idx);
                     }
                 } else {
-                    string command = favoritesList.GetCommandForResult(result);
+                    string command = favoritesList.GetCommandForResult(text, grammar);
                     if(command != null) {
                         SubmitCommand("EQUIP|" + command);
                     } else {
-                        command = config.GetConsoleCommandList().GetCommandForPhrase(result.Grammar);
+                        command = config.GetConsoleCommandList().GetCommandForPhrase(grammar);
                         if (command != null) {
                             // Starting with @ is the SRGS file, the command is in semantics
                             if (command[0] == '@') {
-                                command = result.Semantics.Value.ToString();
+                                command = semantics;
                             }
                             SubmitCommand("COMMAND|" + command);
                         }

@@ -32,7 +32,7 @@ namespace DSN {
         public static void appendPhrase(GrammarBuilder builder, string phrase, Configuration config, bool isSubsetMatchingEnabled = false) {
             var optionalExpression = config.GetOptionalExpression();
             var optionalReplacement = "\0" + config.GetOptionalReplacement() + "\0";
-            SubsetMatchingMode matchingMode = config.getConfiguredMatchingMode();
+            SubsetMatchingMode matchingMode = config.GetConfiguredMatchingMode();
 
             if (optionalExpression == null) {
                 if (isSubsetMatchingEnabled) {

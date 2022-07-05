@@ -8,7 +8,7 @@ using System.Threading;
 using NAudio.CoreAudioApi;
 
 namespace DSN {
-    class SpeechRecognitionManager : NAudio.CoreAudioApi.Interfaces.IMMNotificationClient, ISpeechRecognitionManager {
+    class Voice2JsonSpeechRecognition : NAudio.CoreAudioApi.Interfaces.IMMNotificationClient, ISpeechRecognitionManager {
         private const long STATUS_STOPPED = 0; // not in recognizing
         private const long STATUS_RECOGNIZING = 1; // in recognizing
         private const long STATUS_WAITING_DEVICE = 2; // waiting for record device
@@ -27,7 +27,7 @@ namespace DSN {
         private long recognitionStatus = STATUS_WAITING_DEVICE; // Need thread safety.
         private Thread waitingDeviceThread;
 
-        private readonly SpeechRecognitionEngine DSN;
+        //private readonly SpeechRecognitionEngine DSN;
         private readonly Object dsnLock = new Object();
 
         // Dialogue can be more generous in the min confidence because
@@ -43,13 +43,14 @@ namespace DSN {
         private readonly MMDeviceEnumerator deviceEnum = new MMDeviceEnumerator();
         private readonly Configuration config;
 
-        public SpeechRecognitionManager(Configuration config) {
+        public Voice2JsonSpeechRecognition(Configuration config) {
             this.config = config;
 
             dialogueMinimumConfidence = float.Parse(config.Get("SpeechRecognition", "dialogueMinConfidence", "0.5"), CultureInfo.InvariantCulture);
             commandMinimumConfidence = float.Parse(config.Get("SpeechRecognition", "commandMinConfidence", "0.7"), CultureInfo.InvariantCulture);
             logAudioSignalIssues = config.Get("SpeechRecognition", "bLogAudioSignalIssues", "0") == "1";
 
+            Trace.TraceInformation("Speech Recognition Engine: Voice2Json (stub)");
             Trace.TraceInformation("Locale: {0}\nDialogueConfidence: {1}\nCommandConfidence: {2}", config.GetLocale(), dialogueMinimumConfidence, commandMinimumConfidence);
 
             pauseAudioFile = config.Get("SpeechRecognition", "pauseAudioFile", DEFAULT_PAUSE_AUDIO_FILE).Trim();
@@ -80,13 +81,13 @@ namespace DSN {
                 }
             }
 
-            this.DSN = new SpeechRecognitionEngine(config.GetLocale());
-            this.DSN.UpdateRecognizerSetting("CFGConfidenceRejectionThreshold", 10); // Range is 0-100
-            this.DSN.EndSilenceTimeoutAmbiguous = TimeSpan.FromMilliseconds(250);
-            this.DSN.AudioStateChanged += DSN_AudioStateChanged;
-            this.DSN.AudioSignalProblemOccurred += DSN_AudioSignalProblemOccurred;
-            this.DSN.SpeechRecognized += DSN_SpeechRecognized;
-            this.DSN.SpeechRecognitionRejected += DSN_SpeechRecognitionRejected;
+            //this.DSN = new SpeechRecognitionEngine(config.GetLocale());
+            //this.DSN.UpdateRecognizerSetting("CFGConfidenceRejectionThreshold", 10); // Range is 0-100
+            //this.DSN.EndSilenceTimeoutAmbiguous = TimeSpan.FromMilliseconds(250);
+            //this.DSN.AudioStateChanged += DSN_AudioStateChanged;
+            //this.DSN.AudioSignalProblemOccurred += DSN_AudioSignalProblemOccurred;
+            //this.DSN.SpeechRecognized += DSN_SpeechRecognized;
+            //this.DSN.SpeechRecognitionRejected += DSN_SpeechRecognitionRejected;
             this.deviceEnum.RegisterEndpointNotificationCallback(this);
 
             WaitRecordingDeviceNonBlocking();
@@ -106,13 +107,13 @@ namespace DSN {
 
             // Select input device
             try {
-                this.DSN.SetInputToDefaultAudioDevice();
+                //this.DSN.SetInputToDefaultAudioDevice();
                 Trace.TraceInformation("Recording device is ready.");
             } catch {
                 Trace.TraceInformation("Waiting for recording device...");
                 while (config.IsRunning()) {
                     try {
-                        this.DSN.SetInputToDefaultAudioDevice();
+                        //this.DSN.SetInputToDefaultAudioDevice();
                         Trace.TraceInformation("Recording device is ready.");
                         break;
                     } catch {
@@ -170,7 +171,7 @@ namespace DSN {
             lock (dsnLock) {
                 try {
                     if (recognitionStatus == STATUS_RECOGNIZING) {
-                        this.DSN.RecognizeAsyncCancel();
+                        //this.DSN.RecognizeAsyncCancel();
                         recognitionStatus = STATUS_STOPPED;
                     }
                 } catch (Exception e) {
@@ -206,7 +207,7 @@ namespace DSN {
                     // Error is thrown if no grammars are loaded
                     if (allGrammars.Count > 0) {
                         SetGrammar(allGrammars);
-                        this.DSN.RecognizeAsync(RecognizeMode.Multiple);
+                        //this.DSN.RecognizeAsync(RecognizeMode.Multiple);
                         recognitionStatus = STATUS_RECOGNIZING;
 
                         Trace.TraceInformation(
@@ -224,11 +225,11 @@ namespace DSN {
         }
 
         private void SetGrammar(List<Grammar> grammars) {
-            this.DSN.RequestRecognizerUpdate();
-            this.DSN.UnloadAllGrammars();
+            //this.DSN.RequestRecognizerUpdate();
+            //this.DSN.UnloadAllGrammars();
             foreach (Grammar grammar in grammars) {
                 try {
-                    this.DSN.LoadGrammar(grammar);
+                    //this.DSN.LoadGrammar(grammar);
                 } catch (Exception ex) {
                     Trace.TraceError("Load grammar '{0}' failed:\n{1}", grammar.Name, ex.ToString());
                 }
@@ -268,7 +269,7 @@ namespace DSN {
                 float minConfidence = isDialogueMode ? dialogueMinimumConfidence : commandMinimumConfidence;
                 if (e.Result.Confidence >= minConfidence) {
                     Trace.TraceInformation("Recognized phrase '{0}' (Confidence: {1})", e.Result.Text, e.Result.Confidence);
-                    OnDialogueLineRecognized?.Invoke(e.Result);
+                    OnDialogueLineRecognized?.Invoke(e.Result.Text, e.Result.Grammar, e.Result.Semantics?.Value?.ToString());
                 } else {
                     Trace.TraceInformation("Recognized phrase '{0}' but ignored because confidence was too low (Confidence: {1})", e.Result.Text, e.Result.Confidence);
                 }

@@ -285,8 +285,7 @@ namespace DSN {
             return false;
         }
 
-        public string GetCommandForResult(RecognitionResult result) {
-            Grammar grammar = result.Grammar;
+        public string GetCommandForResult(string text, Grammar grammar) {
             if (commandsByGrammar.ContainsKey(grammar)) {
                 string command = commandsByGrammar[grammar];
 
@@ -296,11 +295,11 @@ namespace DSN {
                 // So the code such as `result.Text.Split(' ').Last()` will not work for them.
                 // Be aware of this when changing the code below.
                 //
-                if (hasSuffix(result.Text, bothHandsSuffix)) {
+                if (hasSuffix(text, bothHandsSuffix)) {
                     command += BOTH_HAND_ID;
-                } else if(hasSuffix(result.Text, rightHandSuffix)) {
+                } else if(hasSuffix(text, rightHandSuffix)) {
                     command += RIGHT_HAND_ID;
-                } else if (hasSuffix(result.Text, leftHandSuffix)) {
+                } else if (hasSuffix(text, leftHandSuffix)) {
                     command += LEFT_HAND_ID;
                 } else { // The user didn't ask for a specific hand, supply a default
                     if (spellMainHandId != null && command.EndsWith(";2;")) {
