@@ -17,7 +17,7 @@ namespace DSN {
         private System.Object dialogueLock = new System.Object();
         private DialogueList currentDialogue = null;
         private FavoritesList favoritesList = null;
-        private SpeechRecognitionManager recognizer;
+        private ISpeechRecognitionManager recognizer;
         private Thread submissionThread;
         private Thread listenThread;
         private BlockingCollection<string> commandQueue;

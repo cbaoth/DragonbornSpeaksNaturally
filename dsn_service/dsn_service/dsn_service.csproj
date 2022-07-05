@@ -69,6 +69,7 @@
     <Compile Include="ExternalInterop.cs" />
     <Compile Include="FavoritesList.cs" />
     <Compile Include="ISpeechRecognitionGrammarProvider.cs" />
+    <Compile Include="ISpeechRecognitionManager.cs" />
     <Compile Include="Phrases.cs" />
     <Compile Include="SkyrimInterop.cs" />
     <Compile Include="SpeechRecognitionManager.cs" />

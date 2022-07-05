@@ -8,7 +8,7 @@ using System.Threading;
 using NAudio.CoreAudioApi;
 
 namespace DSN {
-    class SpeechRecognitionManager : NAudio.CoreAudioApi.Interfaces.IMMNotificationClient {
+    class SpeechRecognitionManager : NAudio.CoreAudioApi.Interfaces.IMMNotificationClient, ISpeechRecognitionManager {
         private const long STATUS_STOPPED = 0; // not in recognizing
         private const long STATUS_RECOGNIZING = 1; // in recognizing
         private const long STATUS_WAITING_DEVICE = 2; // waiting for record device
@@ -16,7 +16,6 @@ namespace DSN {
         private const string DEFAULT_PAUSE_AUDIO_FILE = @"C:\Windows\media\Speech Off.wav";
         private const string DEFAULT_RESUME_AUDIO_FILE = @"C:\Windows\media\Speech On.wav";
 
-        public delegate void DialogueLineRecognitionHandler(RecognitionResult result);
         public event DialogueLineRecognitionHandler OnDialogueLineRecognized;
 
         private bool isPaused = false;
