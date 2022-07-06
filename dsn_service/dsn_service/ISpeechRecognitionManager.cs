@@ -2,7 +2,7 @@
 
 namespace DSN
 {
-    delegate void DialogueLineRecognitionHandler(string text, Grammar grammar, string semantics);
+    delegate void DialogueLineRecognitionHandler(string text, RecognitionGrammar grammar, string semantics);
 
     interface ISpeechRecognitionManager
     {

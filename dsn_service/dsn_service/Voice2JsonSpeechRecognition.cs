@@ -19,8 +19,8 @@ namespace DSN {
         public event DialogueLineRecognitionHandler OnDialogueLineRecognized;
 
         private bool isPaused = false;
-        private List<Grammar> pausePhrases = new List<Grammar>();
-        private List<Grammar> resumePhrases = new List<Grammar>();
+        private List<RecognitionGrammar> pausePhrases = new List<RecognitionGrammar>();
+        private List<RecognitionGrammar> resumePhrases = new List<RecognitionGrammar>();
         private readonly string pauseAudioFile;
         private readonly string resumeAudioFile;
 
@@ -43,6 +43,8 @@ namespace DSN {
         private readonly MMDeviceEnumerator deviceEnum = new MMDeviceEnumerator();
         private readonly Configuration config;
 
+        private List<RecognitionGrammar> allGrammars;
+
         public Voice2JsonSpeechRecognition(Configuration config) {
             this.config = config;
 
@@ -63,7 +65,7 @@ namespace DSN {
                     continue;
                 Trace.TraceInformation("Found pause phrase: '{0}'", phrase);
                 try {
-                    Grammar g = Phrases.createGrammar(Phrases.normalize(phrase, config), config);
+                    RecognitionGrammar g = Phrases.createGrammar(Phrases.normalize(phrase, config), config);
                     pausePhrases.Add(g);
                 } catch (Exception ex) {
                     Trace.TraceError("Failed to create grammar for pause phrase {0} due to exception:\n{1}", phrase, ex.ToString());
@@ -74,7 +76,7 @@ namespace DSN {
                     continue;
                 Trace.TraceInformation("Found resume phrase: '{0}'", phrase);
                 try {
-                    Grammar g = Phrases.createGrammar(Phrases.normalize(phrase, config), config);
+                    RecognitionGrammar g = Phrases.createGrammar(Phrases.normalize(phrase, config), config);
                     resumePhrases.Add(g);
                 } catch (Exception ex) {
                     Trace.TraceError("Failed to create grammar for resume phrase {0} due to exception:\n{1}", phrase, ex.ToString());
@@ -195,7 +197,7 @@ namespace DSN {
 
                     StopRecognition(); // Cancel previous recognition
 
-                    List<Grammar> allGrammars = new List<Grammar>();
+                    allGrammars = new List<RecognitionGrammar>();
                     if (isPaused) {
                         allGrammars.AddRange(resumePhrases);
                     } else {
@@ -224,16 +226,27 @@ namespace DSN {
             }
         }
 
-        private void SetGrammar(List<Grammar> grammars) {
+        private void SetGrammar(List<RecognitionGrammar> grammars) {
             //this.DSN.RequestRecognizerUpdate();
             //this.DSN.UnloadAllGrammars();
-            foreach (Grammar grammar in grammars) {
+            string jsgf = "";
+            int i = 0;
+            foreach (RecognitionGrammar grammar in grammars) {
                 try {
                     //this.DSN.LoadGrammar(grammar);
+                    jsgf += GrammarToJSGF(grammar, i);
                 } catch (Exception ex) {
                     Trace.TraceError("Load grammar '{0}' failed:\n{1}", grammar.Name, ex.ToString());
                 }
+                i++;
             }
+
+            Trace.TraceInformation("JSGF:\n{0}", jsgf);
+        }
+
+        private string GrammarToJSGF(RecognitionGrammar grammar, int index) {
+            string jsgf = "[dsn_" + index + "]\n" + grammar.ToJSGF() + "\n\n";
+            return jsgf;
         }
 
         private void DSN_SpeechRecognitionRejected(object sender, SpeechRecognitionRejectedEventArgs e) {
@@ -242,7 +255,7 @@ namespace DSN {
 
         private void DSN_SpeechRecognized(object sender, SpeechRecognizedEventArgs e) {
             lock (dsnLock) {
-                if (pausePhrases.Contains(e.Result.Grammar) || resumePhrases.Contains(e.Result.Grammar)) {
+                if (false /*pausePhrases.Contains(e.Result.Grammar) || resumePhrases.Contains(e.Result.Grammar)*/) {
                     if (e.Result.Confidence >= commandMinimumConfidence) {
                         StopRecognition();
 
@@ -269,7 +282,7 @@ namespace DSN {
                 float minConfidence = isDialogueMode ? dialogueMinimumConfidence : commandMinimumConfidence;
                 if (e.Result.Confidence >= minConfidence) {
                     Trace.TraceInformation("Recognized phrase '{0}' (Confidence: {1})", e.Result.Text, e.Result.Confidence);
-                    OnDialogueLineRecognized?.Invoke(e.Result.Text, e.Result.Grammar, e.Result.Semantics?.Value?.ToString());
+                    //OnDialogueLineRecognized?.Invoke(e.Result.Text, e.Result.Grammar, e.Result.Semantics?.Value?.ToString());
                 } else {
                     Trace.TraceInformation("Recognized phrase '{0}' but ignored because confidence was too low (Confidence: {1})", e.Result.Text, e.Result.Confidence);
                 }

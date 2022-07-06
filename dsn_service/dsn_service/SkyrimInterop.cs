@@ -40,7 +40,6 @@ namespace DSN {
                         recognizer = new Voice2JsonSpeechRecognition(config);
                         break;
                     case RecognitionEngine.Microsoft:
-                    default:
                         recognizer = new MicrosoftSpeechRecognition(config);
                         break;
                 }
@@ -145,7 +144,7 @@ namespace DSN {
             }
         }
 
-        private void Recognizer_OnDialogueLineRecognized(string text, Grammar grammar, string semantics) {
+        private void Recognizer_OnDialogueLineRecognized(string text, RecognitionGrammar grammar, string semantics) {
             lock (dialogueLock) {
                 if (currentDialogue != null) {
                     int idx = currentDialogue.GetLineIndex(grammar);

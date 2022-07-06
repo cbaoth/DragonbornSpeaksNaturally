@@ -70,6 +70,7 @@
     <Compile Include="FavoritesList.cs" />
     <Compile Include="ISpeechRecognitionGrammarProvider.cs" />
     <Compile Include="ISpeechRecognitionManager.cs" />
+    <Compile Include="RecognitionGrammar.cs" />
     <Compile Include="Voice2JsonSpeechRecognition.cs" />
     <Compile Include="Phrases.cs" />
     <Compile Include="SkyrimInterop.cs" />

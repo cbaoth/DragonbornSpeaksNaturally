@@ -10,7 +10,7 @@ namespace DSN {
         private Configuration config;
 
         public long id { get; private set; }
-        private Dictionary<Grammar, int> grammarToIndex = new Dictionary<Grammar, int>();
+        private Dictionary<RecognitionGrammar, int> grammarToIndex = new Dictionary<RecognitionGrammar, int>();
 
         public static DialogueList Parse(string input, Configuration config) {
             string[] tokens = input.Split('|');
@@ -33,7 +33,8 @@ namespace DSN {
                 if (line == null || line.Trim() == "")
                     continue;
                 try {
-                    Grammar g = Phrases.createGrammar(line, config, config.IsSubsetMatchingEnabled());
+                    RecognitionGrammar g = Phrases.createGrammar(line, config, config.IsSubsetMatchingEnabled());
+                    g.Name = line;
                     grammarToIndex[g] = i;
                 }
                 catch(Exception ex) {
@@ -46,7 +47,8 @@ namespace DSN {
                     continue;
                 Trace.TraceInformation("Found goodbye phrase: '{0}'", phrase);
                 try {
-                    Grammar g = Phrases.createGrammar(phrase, config, config.IsSubsetMatchingEnabled());
+                    RecognitionGrammar g = Phrases.createGrammar(phrase, config, config.IsSubsetMatchingEnabled());
+                    g.Name = phrase;
                     grammarToIndex[g] = -2;
                 } catch (Exception ex) {
                     Trace.TraceError("Failed to create grammar for exit dialogue phrase {0} due to exception:\n{1}", phrase, ex.ToString());
@@ -54,21 +56,21 @@ namespace DSN {
             }
         }
 
-        public int GetLineIndex(Grammar grammar) {
+        public int GetLineIndex(RecognitionGrammar grammar) {
             if (this.grammarToIndex.ContainsKey(grammar)) {
                 return grammarToIndex[grammar];
             }
             return -1;
         }
 
-        public List<Grammar> GetGrammars() {
-            return new List<Grammar>(this.grammarToIndex.Keys);
+        public List<RecognitionGrammar> GetGrammars() {
+            return new List<RecognitionGrammar>(this.grammarToIndex.Keys);
         }
 
         public void PrintToTrace() {
             Trace.TraceInformation("Dialogue List:");
-            foreach(Grammar g in grammarToIndex.Keys) {
-                Trace.TraceInformation("Line {0} : {1}", grammarToIndex[g], g.ToString());
+            foreach(RecognitionGrammar g in grammarToIndex.Keys) {
+                Trace.TraceInformation("Line {0} : {1}", grammarToIndex[g], g.Name);
             }
         }
     }

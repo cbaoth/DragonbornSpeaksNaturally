@@ -29,17 +29,12 @@ namespace DSN {
             return newPhrases.ToArray();
         }
 
-        public static void appendPhrase(GrammarBuilder builder, string phrase, Configuration config, bool isSubsetMatchingEnabled = false) {
+        public static void appendPhrase(RecognitionGrammar grammar, string phrase, Configuration config, bool isSubsetMatchingEnabled = false) {
             var optionalExpression = config.GetOptionalExpression();
             var optionalReplacement = "\0" + config.GetOptionalReplacement() + "\0";
-            SubsetMatchingMode matchingMode = config.GetConfiguredMatchingMode();
 
             if (optionalExpression == null) {
-                if (isSubsetMatchingEnabled) {
-                    builder.Append(phrase, matchingMode);
-                } else {
-                    builder.Append(phrase);
-                }
+                grammar.Append(phrase, false, isSubsetMatchingEnabled);
                 return;
             }
 
@@ -53,21 +48,17 @@ namespace DSN {
 
                 // Even numbers are non-optional and odd numbers are optional
                 if (i % 2 == 0) {
-                    if (isSubsetMatchingEnabled) {
-                        builder.Append(part, matchingMode);
-                    } else {
-                        builder.Append(part);
-                    }
+                    grammar.Append(part, false, isSubsetMatchingEnabled);
                 } else {
-                    builder.Append(part, 0, 1);
+                    grammar.Append(part, true, isSubsetMatchingEnabled);
                 }
             }
         }
 
-        public static Grammar createGrammar(string phrase, Configuration config, bool isSubsetMatchingEnabled = false) {
-            GrammarBuilder builder = new GrammarBuilder();
-            appendPhrase(builder, phrase, config, isSubsetMatchingEnabled);
-            return new Grammar(builder);
+        public static RecognitionGrammar createGrammar(string phrase, Configuration config, bool isSubsetMatchingEnabled = false) {
+            RecognitionGrammar grammar = new RecognitionGrammar(config);
+            appendPhrase(grammar, phrase, config, isSubsetMatchingEnabled);
+            return grammar;
         }
     }
 }

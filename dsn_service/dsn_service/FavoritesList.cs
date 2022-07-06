@@ -15,7 +15,7 @@ namespace DSN {
             = " Dagger; Mace; Sword; Axe; Battleaxe; Greatsword; Warhammer; Bow; Crossbow; Shield";
 
         private Configuration config;
-        private Dictionary<Grammar, string> commandsByGrammar;
+        private Dictionary<RecognitionGrammar, string> commandsByGrammar;
 
         private bool enabled;
 
@@ -42,7 +42,7 @@ namespace DSN {
 
         public FavoritesList(Configuration config) {
             this.config = config;
-            commandsByGrammar = new Dictionary<Grammar, string>();
+            commandsByGrammar = new Dictionary<RecognitionGrammar, string>();
 
             enabled = config.Get("Favorites", "enabled", "0") == "1";
             leftHandMode = config.Get("Favorites", "leftHandMode", "0") == "1";
@@ -152,38 +152,35 @@ namespace DSN {
             handsSuffix.AddRange(bothHandsSuffix);
             handsSuffix.AddRange(rightHandSuffix);
             handsSuffix.AddRange(leftHandSuffix);
-            Choices handChoice = new Choices(handsSuffix.ToArray());
 
-            GrammarBuilder grammarBuilder = new GrammarBuilder();
+            RecognitionGrammar grammar = new RecognitionGrammar(config);
 
             // Append hand choice prefix
             if (isSingleHanded && useEquipHandPrefix && handsSuffix.Count > 0)
             {
                 // Optional left/right. When excluded, try to equip to both hands
-                grammarBuilder.Append(handChoice, 0, 1);
+                grammar.Append(handsSuffix, true, false);
             }
 
             if (equipPrefix.Length > 0) {
-                Choices equipPrefixChoice = new Choices(equipPrefix.ToArray());
-                grammarBuilder.Append(equipPrefixChoice, omitHandSuffix ? 0 : 1, 1);
+                grammar.Append(equipPrefix.ToList(), omitHandSuffix, false);
             }
 
             // Append hand choice infix
             if (isSingleHanded && useEquipHandInfix && handsSuffix.Count > 0) {
                 // Optional left/right. When excluded, try to equip to both hands
-                grammarBuilder.Append(handChoice, 0, 1);
+                grammar.Append(handsSuffix, true, false);
             }
 
-            Phrases.appendPhrase(grammarBuilder, phrase, config);
+            Phrases.appendPhrase(grammar, phrase, config);
 
             // Append hand choice suffix
             if (isSingleHanded && useEquipHandSuffix && handsSuffix.Count > 0)
             {
                 // Optional left/right. When excluded, try to equip to both hands
-                grammarBuilder.Append(handChoice, 0, 1);
+                grammar.Append(handsSuffix, true, false);
             }
 
-            Grammar grammar = new Grammar(grammarBuilder);
             grammar.Name = phrase;
             commandsByGrammar[grammar] = command;
         }
@@ -268,7 +265,7 @@ namespace DSN {
 
         public void PrintToTrace() {
             Trace.TraceInformation("Favorites List Phrases:");
-            foreach (KeyValuePair<Grammar, string> entry in commandsByGrammar) {
+            foreach (KeyValuePair<RecognitionGrammar, string> entry in commandsByGrammar) {
                 Trace.TraceInformation("Phrase '{0}' mapped to equip command '{1}'", entry.Key.Name, entry.Value);
             }
         }
@@ -285,7 +282,7 @@ namespace DSN {
             return false;
         }
 
-        public string GetCommandForResult(string text, Grammar grammar) {
+        public string GetCommandForResult(string text, RecognitionGrammar grammar) {
             if (commandsByGrammar.ContainsKey(grammar)) {
                 string command = commandsByGrammar[grammar];
 
@@ -317,8 +314,8 @@ namespace DSN {
             return null;
         }
 
-        public List<Grammar> GetGrammars() {
-            return new List<Grammar>(commandsByGrammar.Keys);
+        public List<RecognitionGrammar> GetGrammars() {
+            return new List<RecognitionGrammar>(commandsByGrammar.Keys);
         }
     }
 }
