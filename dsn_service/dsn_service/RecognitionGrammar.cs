@@ -31,8 +31,6 @@ namespace DSN
 
     class RecognitionGrammar
     {
-        private static Regex blankRegex = new Regex("\\s+");
-
         public string Name;
 
         private Configuration config;
@@ -100,7 +98,7 @@ namespace DSN
                             parts.Add(words);
                         }
                     }
-                    jsgf = blankRegex.Replace(String.Join(" ", parts), " ");
+                    jsgf = Phrases.cleanBlank(String.Join(" ", parts));
                     // 去除多余空白
                     
                     break;

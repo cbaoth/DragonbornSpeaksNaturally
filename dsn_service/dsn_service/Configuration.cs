@@ -81,6 +81,7 @@ namespace DSN {
         private string optionalReplacement = "";
 
         private CultureInfo locale = CultureInfo.InstalledUICulture;
+        private bool needSegmenter = false;
 
         public Configuration() {
             iniFilePath = ResolveFilePath(CONFIG_FILE_NAMES);
@@ -91,6 +92,22 @@ namespace DSN {
             merged = new IniData();
             merged.Merge(global);
             merged.Merge(local);
+
+            string localeStr = Get("SpeechRecognition", "Locale", "");
+            if (localeStr.Length > 0)
+            {
+                locale = new CultureInfo(localeStr);
+            }
+
+            string engine = Get("SpeechRecognition", "Engine", "").Trim().ToLower();
+            if (engine == "voice2json")
+            {
+                recognitionEngine = RecognitionEngine.Voice2Json;
+
+                if (GetLocale().Name.Contains("zh")) {
+                    needSegmenter = true;
+                }
+            }
 
             string matchingMode = Get("Dialogue", "SubsetMatchingMode", DEFAULT_GRAMMAR_MATCHING_MODE).Trim();
             try {
@@ -110,11 +127,6 @@ namespace DSN {
                 Trace.TraceError(ex.ToString());
             }
 
-            string engine = Get("SpeechRecognition", "Engine", "").Trim().ToLower();
-            if (engine == "voice2json") {
-                recognitionEngine = RecognitionEngine.Voice2Json;
-            }
-
             goodbyePhrases = getPhrases("Dialogue", "goodbyePhrases");
             pausePhrases = getPhrases("SpeechRecognition", "pausePhrases");
             resumePhrases = getPhrases("SpeechRecognition", "resumePhrases");
@@ -129,11 +141,6 @@ namespace DSN {
             if (opExpStr.Length > 0) {
                 optionalExpression = new Regex(opExpStr);
                 optionalReplacement = Get("SpeechRecognition", "optionalReplacement", DEFAULT_OPTIONAL_REPLACEMENT);
-            }
-
-            string localeStr = Get("SpeechRecognition", "Locale", "");
-            if (localeStr.Length > 0) {
-                locale = new CultureInfo(localeStr);
             }
 
             consoleCommandList = CommandList.FromIniSection(merged, "ConsoleCommands", this);
@@ -219,6 +226,10 @@ namespace DSN {
 
         public CultureInfo GetLocale() {
             return locale;
+        }
+        public bool NeedSegmenter()
+        {
+            return needSegmenter;
         }
 
         public string GetItemNameMap() {

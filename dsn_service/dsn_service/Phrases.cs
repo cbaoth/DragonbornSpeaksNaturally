@@ -1,6 +1,8 @@
-﻿using System;
+﻿using JiebaNet.Segmenter;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Speech.Recognition;
 using System.Text;
@@ -9,13 +11,56 @@ using System.Threading.Tasks;
 
 namespace DSN {
     class Phrases {
+        private static readonly string ZH_SEGMENTER_DICT_PATH = "Resources\\base_dictionary.txt";
+
+        private static Regex blankRegex = new Regex("\\s+");
+        private static Regex characterRegex = new Regex("[^\\s]");
+
+        private static JiebaSegmenter segmenter = new JiebaSegmenter();
+        private static HashSet<string> segmenterDict = null;
+
+        public static string cleanBlank(string str) {
+            return blankRegex.Replace(str, " ").Trim();
+        }
+
         public static string normalize(string phrase, Configuration config) {
             var regex = config.GetNormalizeExpression();
             var repl = config.GetNormalizeReplacement();
             if (regex != null) {
                 phrase = regex.Replace(phrase, repl);
             }
-            return phrase.Trim();
+
+            // word segmentation for Chinese
+            if (config.NeedSegmenter()) {
+                phrase = wordCut(phrase);
+            }
+
+            return cleanBlank(phrase);
+        }
+
+        private static void loadSegmenterDict() {
+            if (segmenterDict != null) {
+                return;
+            }
+            segmenterDict = new HashSet<string>();
+            var lines = File.ReadLines(ZH_SEGMENTER_DICT_PATH);
+            foreach (var line in lines) {
+                segmenterDict.Add(line.Split(new char[] { ' ', '\t', '('})[0]);
+            }
+        }
+
+        // word segmentation for Chinese
+        public static string wordCut(string phrase) {
+            var list = segmenter.Cut(phrase).ToList();
+            loadSegmenterDict();
+            for (int i = 0; i < list.Count; i++) {
+                // The word is not in the speech engine's dictionary.
+                // Split it into individual characters.
+                if (list[i].Length > 0 && !segmenterDict.Contains(list[i])) {
+                    list[i] = characterRegex.Replace(list[i], "$0 ");
+                }
+            }
+            return string.Join(" ", list);
         }
 
         public static string[] normalize(string[] phrases, Configuration config) {
