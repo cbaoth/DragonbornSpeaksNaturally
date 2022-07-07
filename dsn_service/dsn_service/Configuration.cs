@@ -80,7 +80,7 @@ namespace DSN {
         private Regex optionalExpression = null;
         private string optionalReplacement = "";
 
-        private CultureInfo locale = CultureInfo.InstalledUICulture;
+        private string locale;
         private bool needSegmenter = false;
 
         public Configuration() {
@@ -93,18 +93,18 @@ namespace DSN {
             merged.Merge(global);
             merged.Merge(local);
 
-            string localeStr = Get("SpeechRecognition", "Locale", "");
-            if (localeStr.Length > 0)
-            {
-                locale = new CultureInfo(localeStr);
+            string lc = Get("SpeechRecognition", "Locale", "");
+            if (lc.Length > 0) {
+                locale = lc.ToLower().Replace('_', '-');
+            } else {
+                locale = CultureInfo.InstalledUICulture.Name.ToLower().Replace('_', '-');
             }
 
             string engine = Get("SpeechRecognition", "Engine", "").Trim().ToLower();
-            if (engine == "voice2json")
-            {
+            if (engine == "voice2json") {
                 recognitionEngine = RecognitionEngine.Voice2Json;
 
-                if (GetLocale().Name.Contains("zh")) {
+                if (locale.Contains("zh")) {
                     needSegmenter = true;
                 }
             }
@@ -224,9 +224,10 @@ namespace DSN {
             return normalizeReplacement;
         }
 
-        public CultureInfo GetLocale() {
+        public string GetLocale() {
             return locale;
         }
+
         public bool NeedSegmenter()
         {
             return needSegmenter;

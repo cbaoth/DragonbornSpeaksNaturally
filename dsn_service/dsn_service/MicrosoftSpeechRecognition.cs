@@ -83,7 +83,7 @@ namespace DSN {
                 }
             }
 
-            this.DSN = new SpeechRecognitionEngine(config.GetLocale());
+            this.DSN = new SpeechRecognitionEngine(new CultureInfo(config.GetLocale()));
             this.DSN.UpdateRecognizerSetting("CFGConfidenceRejectionThreshold", 10); // Range is 0-100
             this.DSN.EndSilenceTimeoutAmbiguous = TimeSpan.FromMilliseconds(250);
             this.DSN.AudioStateChanged += DSN_AudioStateChanged;

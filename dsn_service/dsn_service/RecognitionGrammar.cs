@@ -57,7 +57,7 @@ namespace DSN
 
             // If xml:lang in the file does not match the DSN's locale, the grammar cannot be loaded.
             XmlAttribute xmlLang = doc.CreateAttribute("xml:lang");
-            xmlLang.Value = config.GetLocale().Name;
+            xmlLang.Value = config.GetLocale();
             doc.DocumentElement.SetAttributeNode(xmlLang);
 
             MemoryStream xmlStream = new MemoryStream();

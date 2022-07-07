@@ -27,7 +27,7 @@ namespace DSN {
         private long recognitionStatus = STATUS_WAITING_DEVICE; // Need thread safety.
         private Thread waitingDeviceThread;
 
-        //private readonly SpeechRecognitionEngine DSN;
+        private readonly Voice2JsonCli DSN;
         private readonly Object dsnLock = new Object();
 
         // Dialogue can be more generous in the min confidence because
@@ -83,6 +83,7 @@ namespace DSN {
                 }
             }
 
+            this.DSN = new Voice2JsonCli(config);
             //this.DSN = new SpeechRecognitionEngine(config.GetLocale());
             //this.DSN.UpdateRecognizerSetting("CFGConfidenceRejectionThreshold", 10); // Range is 0-100
             //this.DSN.EndSilenceTimeoutAmbiguous = TimeSpan.FromMilliseconds(250);
@@ -109,13 +110,13 @@ namespace DSN {
 
             // Select input device
             try {
-                //this.DSN.SetInputToDefaultAudioDevice();
+                this.DSN.SetInputToDefaultAudioDevice();
                 Trace.TraceInformation("Recording device is ready.");
             } catch {
                 Trace.TraceInformation("Waiting for recording device...");
                 while (config.IsRunning()) {
                     try {
-                        //this.DSN.SetInputToDefaultAudioDevice();
+                        this.DSN.SetInputToDefaultAudioDevice();
                         Trace.TraceInformation("Recording device is ready.");
                         break;
                     } catch {
@@ -173,7 +174,7 @@ namespace DSN {
             lock (dsnLock) {
                 try {
                     if (recognitionStatus == STATUS_RECOGNIZING) {
-                        //this.DSN.RecognizeAsyncCancel();
+                        this.DSN.RecognizeAsyncCancel();
                         recognitionStatus = STATUS_STOPPED;
                     }
                 } catch (Exception e) {
@@ -209,7 +210,7 @@ namespace DSN {
                     // Error is thrown if no grammars are loaded
                     if (allGrammars.Count > 0) {
                         SetGrammar(allGrammars);
-                        //this.DSN.RecognizeAsync(RecognizeMode.Multiple);
+                        this.DSN.RecognizeAsync();
                         recognitionStatus = STATUS_RECOGNIZING;
 
                         Trace.TraceInformation(
@@ -227,13 +228,10 @@ namespace DSN {
         }
 
         private void SetGrammar(List<RecognitionGrammar> grammars) {
-            //this.DSN.RequestRecognizerUpdate();
-            //this.DSN.UnloadAllGrammars();
             string jsgf = "";
             int i = 0;
             foreach (RecognitionGrammar grammar in grammars) {
                 try {
-                    //this.DSN.LoadGrammar(grammar);
                     jsgf += GrammarToJSGF(grammar, i);
                 } catch (Exception ex) {
                     Trace.TraceError("Load grammar '{0}' failed:\n{1}", grammar.Name, ex.ToString());
@@ -241,7 +239,8 @@ namespace DSN {
                 i++;
             }
 
-            Trace.TraceInformation("JSGF:\n{0}", jsgf);
+            //Trace.TraceInformation("JSGF:\n{0}", jsgf);
+            this.DSN.LoadJSGF(jsgf);
         }
 
         private string GrammarToJSGF(RecognitionGrammar grammar, int index) {
