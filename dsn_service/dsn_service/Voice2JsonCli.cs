@@ -12,6 +12,9 @@ using System.Threading.Tasks;
 namespace DSN
 {
     class Voice2JsonCli {
+        public delegate void SpeechRecognizedHandler(string resultJson);
+        public event SpeechRecognizedHandler SpeechRecognized;
+
         private Configuration config;
 
         private readonly Object ioLock = new Object();
@@ -188,6 +191,7 @@ namespace DSN
                 Trace.Write("[I] " + line + "\n");
             }
         }
+
         private void ReadStdErr() {
             var reader = process.StandardError;
             while (true) {
@@ -196,6 +200,17 @@ namespace DSN
                     break;
                 }
                 Trace.Write("[E] " + line + "\n");
+            }
+        }
+
+        private void ReadRecognizeResult() {
+            var reader = process.StandardOutput;
+            while (true) {
+                var line = reader.ReadLine();
+                if (line == null) {
+                    break;
+                }
+                SpeechRecognized?.Invoke(line);
             }
         }
 
@@ -219,7 +234,7 @@ namespace DSN
                 }
 
                 stdIn = new BinaryWriter(process.StandardInput.BaseStream);
-                readStdOut = new Thread(ReadStdOut);
+                readStdOut = new Thread(ReadRecognizeResult);
                 readStdErr = new Thread(ReadStdErr);
                 readStdOut.Start();
                 readStdErr.Start();

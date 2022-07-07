@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Threading;
 using NAudio.CoreAudioApi;
+using Newtonsoft.Json.Linq;
 
 namespace DSN {
     class Voice2JsonSpeechRecognition : NAudio.CoreAudioApi.Interfaces.IMMNotificationClient, ISpeechRecognitionManager {
@@ -43,6 +44,7 @@ namespace DSN {
         private readonly MMDeviceEnumerator deviceEnum = new MMDeviceEnumerator();
         private readonly Configuration config;
 
+        private int sessionId = 0;
         private List<RecognitionGrammar> allGrammars;
 
         public Voice2JsonSpeechRecognition(Configuration config) {
@@ -84,13 +86,7 @@ namespace DSN {
             }
 
             this.DSN = new Voice2JsonCli(config);
-            //this.DSN = new SpeechRecognitionEngine(config.GetLocale());
-            //this.DSN.UpdateRecognizerSetting("CFGConfidenceRejectionThreshold", 10); // Range is 0-100
-            //this.DSN.EndSilenceTimeoutAmbiguous = TimeSpan.FromMilliseconds(250);
-            //this.DSN.AudioStateChanged += DSN_AudioStateChanged;
-            //this.DSN.AudioSignalProblemOccurred += DSN_AudioSignalProblemOccurred;
-            //this.DSN.SpeechRecognized += DSN_SpeechRecognized;
-            //this.DSN.SpeechRecognitionRejected += DSN_SpeechRecognitionRejected;
+            this.DSN.SpeechRecognized += DSN_SpeechRecognized;
             this.deviceEnum.RegisterEndpointNotificationCallback(this);
 
             WaitRecordingDeviceNonBlocking();
@@ -228,11 +224,12 @@ namespace DSN {
         }
 
         private void SetGrammar(List<RecognitionGrammar> grammars) {
+            sessionId++;
             string jsgf = "";
             int i = 0;
             foreach (RecognitionGrammar grammar in grammars) {
                 try {
-                    jsgf += GrammarToJSGF(grammar, i);
+                    jsgf += GrammarToJSGF(grammar, sessionId, i);
                 } catch (Exception ex) {
                     Trace.TraceError("Load grammar '{0}' failed:\n{1}", grammar.Name, ex.ToString());
                 }
@@ -243,19 +240,82 @@ namespace DSN {
             this.DSN.LoadJSGF(jsgf);
         }
 
-        private string GrammarToJSGF(RecognitionGrammar grammar, int index) {
-            string jsgf = "[dsn_" + index + "]\n" + grammar.ToJSGF() + "\n\n";
+        private string GrammarToJSGF(RecognitionGrammar grammar, int sessionId, int index) {
+            string jsgf = "[dsn_" + sessionId + "_" + index + "]\n" + grammar.ToJSGF() + "\n\n";
             return jsgf;
         }
 
-        private void DSN_SpeechRecognitionRejected(object sender, SpeechRecognitionRejectedEventArgs e) {
-            // nothing to do
-        }
+        private void DSN_SpeechRecognized(string resultJson) {
+            /*
+             * JSON with some recognized:
+             {
+	            "text": "装备 黑 檀 弓",
+	            "likelihood": 0.05448459450513476,
+	            "transcribe_seconds": 8.321307364999939,
+	            "wav_seconds": 0.0163125,
+	            "tokens": ["装备", "黑", "檀", "弓"],
+	            "timeout": false,
+	            "intent": {
+		            "name": "dsn_28",
+		            "confidence": 0.75
+	            },
+	            "entities": [],
+	            "raw_text": " 装备 黑 檀 弓 弓",
+	            "recognize_seconds": 0.001171658999965075,
+	            "raw_tokens": ["装备", "黑", "檀", "弓"],
+	            "speech_confidence": null,
+	            "wav_name": null,
+	            "slots": {}
+            }
+            * JSON with nothing recognized:
+            {
+	            "text": "",
+	            "likelihood": 0.5669604241019671,
+	            "transcribe_seconds": 6.2813740700000835,
+	            "wav_seconds": 0.01225,
+	            "tokens": [],
+	            "timeout": false,
+	            "intent": {
+		            "name": "",
+		            "confidence": 0
+	            },
+	            "entities": [],
+	            "raw_text": "",
+	            "recognize_seconds": 0,
+	            "raw_tokens": [],
+	            "speech_confidence": null,
+	            "wav_name": null,
+	            "slots": {}
+            }
+            */
+            dynamic result = JObject.Parse(resultJson);
+            if (result.text == null || result.text == "") {
+                return;
+            }
+            string text = result.text;
+            string intent = result.intent.name;
+            float confidence = result.intent.confidence * 100;
 
-        private void DSN_SpeechRecognized(object sender, SpeechRecognizedEventArgs e) {
+            if (logAudioSignalIssues) {
+                Trace.TraceInformation("Recognition log: {0}, confidence: {1}", text, confidence);
+            }
+
+            var intentParts = intent.Split('_');
+            if (intentParts.Length != 3 || intentParts[0] != "dsn") {
+                return;
+            }
+
+            int resultSessionId = Convert.ToInt32(intentParts[1]);
+            if (resultSessionId != sessionId) {
+                return;
+            }
+
+            int grammarIndex = Convert.ToInt32(intentParts[2]);
+            var grammar = allGrammars[grammarIndex];
+
             lock (dsnLock) {
-                if (false /*pausePhrases.Contains(e.Result.Grammar) || resumePhrases.Contains(e.Result.Grammar)*/) {
-                    if (e.Result.Confidence >= commandMinimumConfidence) {
+                if (pausePhrases.Contains(grammar) || resumePhrases.Contains(grammar)) {
+                    if (confidence >= commandMinimumConfidence) {
                         StopRecognition();
 
                         isPaused = !isPaused;
@@ -273,17 +333,17 @@ namespace DSN {
 
                         RestartRecognition();
                     } else {
-                        Trace.TraceInformation("Recognized phrase '{0}' but ignored because confidence was too low (Confidence: {1})", e.Result.Text, e.Result.Confidence);
+                        Trace.TraceInformation("Recognized phrase '{0}' but ignored because confidence was too low (Confidence: {1})", text, confidence);
                     }
                     return;
                 }
 
                 float minConfidence = isDialogueMode ? dialogueMinimumConfidence : commandMinimumConfidence;
-                if (e.Result.Confidence >= minConfidence) {
-                    Trace.TraceInformation("Recognized phrase '{0}' (Confidence: {1})", e.Result.Text, e.Result.Confidence);
-                    //OnDialogueLineRecognized?.Invoke(e.Result.Text, e.Result.Grammar, e.Result.Semantics?.Value?.ToString());
+                if (confidence >= minConfidence) {
+                    Trace.TraceInformation("Recognized phrase '{0}' (Confidence: {1})", text, confidence);
+                    OnDialogueLineRecognized?.Invoke(text, grammar, "");
                 } else {
-                    Trace.TraceInformation("Recognized phrase '{0}' but ignored because confidence was too low (Confidence: {1})", e.Result.Text, e.Result.Confidence);
+                    Trace.TraceInformation("Recognized phrase '{0}' but ignored because confidence was too low (Confidence: {1})", text, confidence);
                 }
             }
         }
