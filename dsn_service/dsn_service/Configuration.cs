@@ -74,7 +74,7 @@ namespace DSN {
         private Regex optionalExpression = null;
         private string optionalReplacement = "";
 
-        private CultureInfo locale = CultureInfo.InstalledUICulture;
+        private CultureInfo locale = CultureInfo.CurrentCulture;
 
         public Configuration() {
             iniFilePath = ResolveFilePath(CONFIG_FILE_NAMES);
