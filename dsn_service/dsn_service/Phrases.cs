@@ -14,7 +14,7 @@ namespace DSN {
         private static readonly string ZH_SEGMENTER_DICT_PATH = "Resources\\base_dictionary.txt";
 
         private static Regex blankRegex = new Regex("\\s+");
-        private static Regex characterRegex = new Regex("[^\\s]");
+        private static Regex characterRegex = new Regex("\\p{IsCJKUnifiedIdeographs}");
 
         private static JiebaSegmenter segmenter = new JiebaSegmenter();
         private static HashSet<string> segmenterDict = null;
