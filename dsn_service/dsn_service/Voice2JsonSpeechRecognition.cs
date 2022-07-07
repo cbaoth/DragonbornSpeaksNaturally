@@ -297,7 +297,7 @@ namespace DSN {
             float confidence = result.intent.confidence * 100;
 
             if (logAudioSignalIssues) {
-                Trace.TraceInformation("Recognition log: {0}, confidence: {1}", text, confidence);
+                Trace.TraceInformation("Recognition log: '{0}' (Confidence: {1})", text, confidence);
             }
 
             var intentParts = intent.Split('_');
