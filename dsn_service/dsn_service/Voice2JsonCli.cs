@@ -161,6 +161,7 @@ namespace DSN
                 process.StartInfo.StandardErrorEncoding = System.Text.Encoding.UTF8;
                 process.StartInfo.FileName = "docker";
                 process.StartInfo.Arguments = "exec -i dsn_voice2json sh -c \"cat > /root/.local/share/voice2json/sentences.ini; " +
+                    "sed -i 's/\\uFEFF//g' /root/.local/share/voice2json/sentences.ini; " +
                     "/usr/lib/voice2json/bin/voice2json -p " + config.GetLocale() + " train-profile\"";
 
                 if (!process.Start()) {
