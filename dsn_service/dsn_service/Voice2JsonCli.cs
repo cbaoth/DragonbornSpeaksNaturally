@@ -63,7 +63,13 @@ namespace DSN
                 process.StartInfo.FileName = command;
                 process.StartInfo.Arguments = args;
 
-                if (!process.Start()) {
+                bool ok = false;
+                try {
+                    ok = process.Start();
+                } catch {
+                    // ignore
+                }
+                if (!ok) {
                     endSession();
                     throw new Exception("Run docker command failed, make sure you have Docker Desktop installed:\n" + command + " " + args);
                 }
