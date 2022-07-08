@@ -52,16 +52,22 @@ namespace DSN
             process = null;
         }
 
-        private int runCommand(string command, string args = "", int waitMs = 0) {
+        private int runCommand(string command, string args = "", int waitMs = 0, bool elevating = false) {
             lock (ioLock) {
                 process = new Process();
-                process.StartInfo.RedirectStandardOutput = true;
-                process.StartInfo.RedirectStandardError = true;
-                process.StartInfo.UseShellExecute = false;
-                process.StartInfo.StandardOutputEncoding = System.Text.Encoding.UTF8;
-                process.StartInfo.StandardErrorEncoding = System.Text.Encoding.UTF8;
                 process.StartInfo.FileName = command;
                 process.StartInfo.Arguments = args;
+
+                if (elevating) {
+                    process.StartInfo.UseShellExecute = true;
+                    process.StartInfo.Verb = "runas";
+                } else {
+                    process.StartInfo.RedirectStandardOutput = true;
+                    process.StartInfo.RedirectStandardError = true;
+                    process.StartInfo.UseShellExecute = false;
+                    process.StartInfo.StandardOutputEncoding = System.Text.Encoding.UTF8;
+                    process.StartInfo.StandardErrorEncoding = System.Text.Encoding.UTF8;
+                }
 
                 bool ok = false;
                 try {
@@ -74,10 +80,12 @@ namespace DSN
                     throw new Exception("Run docker command failed, make sure you have Docker Desktop installed:\n" + command + " " + args);
                 }
 
-                readStdOut = new Thread(ReadStdOut);
-                readStdErr = new Thread(ReadStdErr);
-                readStdOut.Start();
-                readStdErr.Start();
+                if (!elevating) {
+                    readStdOut = new Thread(ReadStdOut);
+                    readStdErr = new Thread(ReadStdErr);
+                    readStdOut.Start();
+                    readStdErr.Start();
+                }
 
                 int exitCode = 0;
                 if (waitMs > 0) {
@@ -93,28 +101,31 @@ namespace DSN
         }
 
         private void init() {
-            string dockerDesktopPath = @"C:\Program Files\Docker\Docker";
-            try {
-                dockerDesktopPath = Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Docker Inc.\Docker\1.0",
-                    "AppPath", @"C:\Program Files\Docker\Docker").ToString();
-            } catch {
-                // ignore
-            }
-            dockerDesktopPath += @"\Docker Desktop.exe";
-
-            Trace.TraceInformation("Launch Docker Desktop");
-            var exitCode = runCommand(dockerDesktopPath, "", 10000);
-            if (exitCode == 0) {
-                Trace.TraceInformation("Wait for Docker Desktop to be ready");
-                for (int i = 1; i < 20; i++) {
-                    if (runCommand("docker", "ps -a") == 0) {
-                        break;
-                    } else {
-                        Thread.Sleep(6000);
-                    }
+            int exitCode;
+            if (runCommand("docker", "ps -a") != 0) {
+                string dockerDesktopPath = @"C:\Program Files\Docker\Docker";
+                try {
+                    dockerDesktopPath = Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Docker Inc.\Docker\1.0",
+                        "AppPath", @"C:\Program Files\Docker\Docker").ToString();
+                } catch {
+                    // ignore
                 }
-            } else if (exitCode != 2) {
-                Trace.TraceError("Failed to launch Docker Desktop, please make sure Docker Desktop is installed on your system.", exitCode);
+                dockerDesktopPath += @"\Docker Desktop.exe";
+
+                Trace.TraceInformation("Launch Docker Desktop");
+                exitCode = runCommand(dockerDesktopPath, "", 5000, true);
+                if (exitCode == 0) {
+                    Trace.TraceInformation("Wait for Docker Desktop to be ready");
+                    for (int i = 1; i < 20; i++) {
+                        if (runCommand("docker", "ps -a") == 0) {
+                            break;
+                        } else {
+                            Thread.Sleep(5000);
+                        }
+                    }
+                } else if (exitCode != 2) {
+                    Trace.TraceError("Failed to launch Docker Desktop, please make sure Docker Desktop is installed on your system.", exitCode);
+                }
             }
 
             Trace.TraceInformation("Launch the docker container 'dsn_voice2json'");
