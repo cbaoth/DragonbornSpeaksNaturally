@@ -20,7 +20,7 @@ namespace DSN
         private readonly Object ioLock = new Object();
         private long sessionId = 0;
         private Process process;
-        private BinaryWriter stdIn;
+        private StreamWriter stdIn;
         private Thread readStdOut;
         private Thread readStdErr;
 
@@ -36,15 +36,6 @@ namespace DSN
         public void SetInputToDefaultAudioDevice() {
             mic.StopRecording();
             mic.StartRecording();
-        }
-
-        private void WaveSourceDataAvailable(object sender, WaveInEventArgs e) {
-            //Trace.TraceInformation("WaveSourceDataAvailable: {0}", e.BytesRecorded);
-            lock (ioLock) {
-                if (stdIn != null && e.BytesRecorded > 0) {
-                    stdIn.Write(e.Buffer);
-                }
-            }
         }
 
         private void endSession() {
@@ -162,8 +153,7 @@ namespace DSN
                 process.StartInfo.StandardOutputEncoding = System.Text.Encoding.UTF8;
                 process.StartInfo.StandardErrorEncoding = System.Text.Encoding.UTF8;
                 process.StartInfo.FileName = "docker";
-                process.StartInfo.Arguments = "exec -i dsn_voice2json sh -c \"cat > /root/sentences.ini; " +
-                    "sed -i 's/\uFEFF//g' /root/sentences.ini; " +
+                process.StartInfo.Arguments = "exec -i dsn_voice2json sh -c \"base64 -id > /root/sentences.ini; " +
                     "/usr/lib/voice2json/bin/voice2json -p " + config.GetLocale() + " train-profile\"";
 
                 if (!process.Start()) {
@@ -176,10 +166,9 @@ namespace DSN
                 readStdOut.Start();
                 readStdErr.Start();
 
-                var stdin = new BinaryWriter(process.StandardInput.BaseStream);
-                stdin.Write(Encoding.UTF8.GetBytes(jsgf));
-                stdin.Flush();
-                stdin.Close();
+                process.StandardInput.WriteLine(Base64Encode(Encoding.UTF8.GetBytes(jsgf)));
+                process.StandardInput.Flush();
+                process.StandardInput.Close();
 
                 process.WaitForExit();
                 var exitCode = process.ExitCode;
@@ -247,7 +236,7 @@ namespace DSN
                 process.StartInfo.StandardOutputEncoding = System.Text.Encoding.UTF8;
                 process.StartInfo.StandardErrorEncoding = System.Text.Encoding.UTF8;
                 process.StartInfo.FileName = "docker";
-                process.StartInfo.Arguments = "exec -i dsn_voice2json sh -c \"/usr/lib/voice2json/bin/voice2json -p "
+                process.StartInfo.Arguments = "exec -i dsn_voice2json sh -c \"base64 -id | /usr/lib/voice2json/bin/voice2json -p "
                     + config.GetLocale() + " transcribe-stream --audio-source -"
                     + " | /usr/lib/voice2json/bin/voice2json -p " + config.GetLocale() + " recognize-intent\"";
 
@@ -256,12 +245,24 @@ namespace DSN
                     throw new Exception("Run docker command failed, make sure you have Docker Desktop installed.");
                 }
 
-                stdIn = new BinaryWriter(process.StandardInput.BaseStream);
+                stdIn = process.StandardInput;
                 readStdOut = new Thread(ReadRecognizeResult);
                 readStdErr = new Thread(ReadStdErr);
                 readStdOut.Start();
                 readStdErr.Start();
             }
+        }
+        private void WaveSourceDataAvailable(object sender, WaveInEventArgs e) {
+            //Trace.TraceInformation("WaveSourceDataAvailable: {0}", e.BytesRecorded);
+            lock (ioLock) {
+                if (stdIn != null && e.BytesRecorded > 0) {
+                    stdIn.WriteLine(Base64Encode(e.Buffer));
+                }
+            }
+        }
+
+        private string Base64Encode(byte[] buffer) {
+            return System.Convert.ToBase64String(buffer);
         }
     }
 }
