@@ -24,17 +24,20 @@ namespace DSN
         private Thread readStdOut;
         private Thread readStdErr;
 
-        // voice2json expects 16-bit 16Khz mono audio as input
-        private WaveInEvent mic = new WaveInEvent { WaveFormat = new WaveFormat(16000, 16, 1) };
+        private WaveInEvent mic;
 
         public Voice2JsonCli(Configuration config) {
             this.config = config;
-            this.mic.DataAvailable += this.WaveSourceDataAvailable;
-
             init();
         }
         public void SetInputToDefaultAudioDevice() {
-            mic.StopRecording();
+            if (mic != null) {
+                mic.StopRecording();
+                mic.Dispose();
+            }
+            // voice2json expects 16-bit 16Khz mono audio as input
+            mic = new WaveInEvent { WaveFormat = new WaveFormat(16000, 16, 1) };
+            this.mic.DataAvailable += this.WaveSourceDataAvailable;
             mic.StartRecording();
         }
 
