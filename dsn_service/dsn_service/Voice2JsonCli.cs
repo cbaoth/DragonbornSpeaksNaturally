@@ -146,7 +146,9 @@ namespace DSN
             runCommand("docker", "exec dsn_voice2json sh -c \"" + 
                 "/usr/lib/voice2json/bin/voice2json -p " + config.GetLocale() + " train-profile; " +
                 "ls /root/.local/share/voice2json | while read d; " +
-                "do ln -sf /root/.local/share/voice2json/sentences.ini /root/.local/share/voice2json/$d/sentences.ini; done" +
+                "do " +
+                  "ln -sf /root/sentences.ini /root/.local/share/voice2json/$d/sentences.ini; " +
+                "done" +
                 "\"");
         }
 
@@ -160,8 +162,8 @@ namespace DSN
                 process.StartInfo.StandardOutputEncoding = System.Text.Encoding.UTF8;
                 process.StartInfo.StandardErrorEncoding = System.Text.Encoding.UTF8;
                 process.StartInfo.FileName = "docker";
-                process.StartInfo.Arguments = "exec -i dsn_voice2json sh -c \"cat > /root/.local/share/voice2json/sentences.ini; " +
-                    "sed -i 's/\\uFEFF//g' /root/.local/share/voice2json/sentences.ini; " +
+                process.StartInfo.Arguments = "exec -i dsn_voice2json sh -c \"cat > /root/sentences.ini; " +
+                    "sed -i 's/\uFEFF//g' /root/sentences.ini; " +
                     "/usr/lib/voice2json/bin/voice2json -p " + config.GetLocale() + " train-profile\"";
 
                 if (!process.Start()) {
