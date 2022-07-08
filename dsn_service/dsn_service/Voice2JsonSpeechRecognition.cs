@@ -44,7 +44,7 @@ namespace DSN {
         private readonly MMDeviceEnumerator deviceEnum = new MMDeviceEnumerator();
         private readonly Configuration config;
 
-        private int sessionId = 0;
+        private long sessionId = 0;
         private List<RecognitionGrammar> allGrammars;
 
         public Voice2JsonSpeechRecognition(Configuration config) {
@@ -224,12 +224,12 @@ namespace DSN {
         }
 
         private void SetGrammar(List<RecognitionGrammar> grammars) {
-            sessionId++;
+            var id = Interlocked.Increment(ref sessionId);
             string jsgf = "";
             int i = 0;
             foreach (RecognitionGrammar grammar in grammars) {
                 try {
-                    jsgf += GrammarToJSGF(grammar, sessionId, i);
+                    jsgf += GrammarToJSGF(grammar, id, i);
                 } catch (Exception ex) {
                     Trace.TraceError("Load grammar '{0}' failed:\n{1}", grammar.Name, ex.ToString());
                 }
@@ -240,7 +240,7 @@ namespace DSN {
             this.DSN.LoadJSGF(jsgf);
         }
 
-        private string GrammarToJSGF(RecognitionGrammar grammar, int sessionId, int index) {
+        private string GrammarToJSGF(RecognitionGrammar grammar, long sessionId, int index) {
             string jsgf = "[dsn_" + sessionId + "_" + index + "]\n" + grammar.ToJSGF() + "\n\n";
             return jsgf;
         }
@@ -305,8 +305,8 @@ namespace DSN {
                 return;
             }
 
-            int resultSessionId = Convert.ToInt32(intentParts[1]);
-            if (resultSessionId != sessionId) {
+            var resultSessionId = Convert.ToInt64(intentParts[1]);
+            if (Interlocked.Read(ref sessionId) != resultSessionId) {
                 return;
             }
 

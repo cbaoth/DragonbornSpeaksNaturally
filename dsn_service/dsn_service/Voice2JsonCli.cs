@@ -18,6 +18,7 @@ namespace DSN
         private Configuration config;
 
         private readonly Object ioLock = new Object();
+        private long sessionId = 0;
         private Process process;
         private BinaryWriter stdIn;
         private Thread readStdOut;
@@ -46,6 +47,11 @@ namespace DSN
             }
         }
 
+        private void endSession() {
+            Interlocked.Increment(ref sessionId);
+            process = null;
+        }
+
         private int runCommand(string command, string args = "", int waitMs = 0) {
             lock (ioLock) {
                 process = new Process();
@@ -58,7 +64,7 @@ namespace DSN
                 process.StartInfo.Arguments = args;
 
                 if (!process.Start()) {
-                    process = null;
+                    endSession();
                     throw new Exception("Run docker command failed, make sure you have Docker Desktop installed:\n" + command + " " + args);
                 }
 
@@ -75,9 +81,7 @@ namespace DSN
                     process.WaitForExit();
                     exitCode = process.ExitCode;
                 }
-                readStdOut.Abort();
-                readStdErr.Abort();
-                process = null;
+                endSession();
                 return exitCode;
             }
         }
@@ -143,7 +147,7 @@ namespace DSN
                     "/usr/lib/voice2json/bin/voice2json -p " + config.GetLocale() + " train-profile\"";
 
                 if (!process.Start()) {
-                    process = null;
+                    endSession();
                     throw new Exception("Run docker command failed, make sure you have Docker Desktop installed.");
                 }
 
@@ -158,10 +162,8 @@ namespace DSN
                 stdin.Close();
 
                 process.WaitForExit();
-                readStdOut.Abort();
-                readStdErr.Abort();
                 var exitCode = process.ExitCode;
-                process = null;
+                endSession();
 
                 if (exitCode != 0) {
                     throw new Exception("Unable to access docker container 'dsn_voice2json', please make sure your Docker Desktop is running.");
@@ -172,18 +174,17 @@ namespace DSN
         public void RecognizeAsyncCancel() {
             lock (ioLock) {
                 if (process != null) {
-                    readStdOut.Abort();
-                    readStdErr.Abort();
                     stdIn = null;
                     process.Kill();
-                    process = null;
+                    endSession();
                 }
             }
         }
 
         private void ReadStdOut() {
+            var mySessionId = Interlocked.Read(ref sessionId);
             var reader = process.StandardOutput;
-            while (true) {
+            while (mySessionId == Interlocked.Read(ref sessionId)) {
                 var line = reader.ReadLine();
                 if (line == null) {
                     break;
@@ -193,8 +194,9 @@ namespace DSN
         }
 
         private void ReadStdErr() {
+            var mySessionId = Interlocked.Read(ref sessionId);
             var reader = process.StandardError;
-            while (true) {
+            while (mySessionId == Interlocked.Read(ref sessionId)) {
                 var line = reader.ReadLine();
                 if (line == null) {
                     break;
@@ -204,8 +206,9 @@ namespace DSN
         }
 
         private void ReadRecognizeResult() {
+            var mySessionId = Interlocked.Read(ref sessionId);
             var reader = process.StandardOutput;
-            while (true) {
+            while (mySessionId == Interlocked.Read(ref sessionId)) {
                 var line = reader.ReadLine();
                 if (line == null) {
                     break;
@@ -229,7 +232,7 @@ namespace DSN
                     + " | /usr/lib/voice2json/bin/voice2json -p " + config.GetLocale() + " recognize-intent\"";
 
                 if (!process.Start()) {
-                    process = null;
+                    endSession();
                     throw new Exception("Run docker command failed, make sure you have Docker Desktop installed.");
                 }
 
