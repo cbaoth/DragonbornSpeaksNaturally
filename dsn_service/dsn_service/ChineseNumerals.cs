@@ -42,6 +42,7 @@ namespace DSN {
         }
 
         public static string Number2ChineseJSGF(string str) {
+            if (str.Length == 0) return str;
             str = Number2Chinese(str)
                 .Replace("一十", "[一]十")
                 .Replace("二", "(二|两)")
@@ -51,14 +52,21 @@ namespace DSN {
         }
 
         public static string Number2Chinese(string src) {
-            if (src.Length > 0 && src[0] == '+') {
-                return "正" + Number2Chinese(src.Substring(1));
+            if (src.Length == 0) return src;
+            if (src.Length > 0) {
+                if (src[0] == '+') {
+                    return "正" + Number2Chinese(src.Substring(1));
+                } else if (src[0] == '-') {
+                    return "负" + Number2Chinese(src.Substring(1));
+                }
             }
             if (src.Contains(".")) {
                 var parts = src.Split('.');
                 if (parts.Length == 2) {
                     // 恰好两段，小数
-                    parts[0] = Int2Chinese(Convert.ToInt32(parts[0]));
+                    if (parts[0].Length > 0) {
+                        parts[0] = Int2Chinese(Convert.ToInt32(parts[0]));
+                    }
                     parts[1] = fractionalPart2Chinese(parts[1]);
                 } else {
                     // 多于两段，可能是版本号

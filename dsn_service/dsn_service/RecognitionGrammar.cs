@@ -40,7 +40,7 @@ namespace DSN
         private string jsgf;
 
         private static Regex nonWordRegex = new Regex(@"[^\p{L}0-9.+-]");
-        private static Regex numberRegex = new Regex("[0-9]+(?:\\.[0-9]+)*");
+        private static Regex numberRegex = new Regex("[+-]?[0-9]*(?:\\.[0-9]+)*");
 
         public RecognitionGrammar(Configuration config) {
             phrases = new List<RecognitionPhrase>();
@@ -95,7 +95,11 @@ namespace DSN
                                 phrase.Words[i] = nonWordRegex.Replace(phrase.Words[i], " ");
                                 // Number to Chinese words
                                 phrase.Words[i] = numberRegex.Replace(phrase.Words[i],
-                                    str => Phrases.wordCut(ChineseNumerals.Number2ChineseJSGF(str.Value)));
+                                    str => ChineseNumerals.Number2ChineseJSGF(str.Value));
+                                // Chinese word segmentation
+                                phrase.Words[i] = Phrases.wordCut(phrase.Words[i]);
+                                // Remove extra spaces
+                                phrase.Words[i] = Phrases.cleanBlank(phrase.Words[i]);
                             }
                         }
 

@@ -18,6 +18,9 @@ namespace DSN {
 
         private static JiebaSegmenter segmenter = new JiebaSegmenter();
         private static HashSet<string> segmenterDict = null;
+        public static string removeBlank(string str) {
+            return blankRegex.Replace(str, "");
+        }
 
         public static string cleanBlank(string str) {
             return blankRegex.Replace(str, " ").Trim();
@@ -29,12 +32,6 @@ namespace DSN {
             if (regex != null) {
                 phrase = regex.Replace(phrase, repl);
             }
-
-            // word segmentation for Chinese
-            if (config.NeedSegmenter()) {
-                phrase = wordCut(phrase);
-            }
-
             return cleanBlank(phrase);
         }
 

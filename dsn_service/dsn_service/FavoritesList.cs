@@ -292,6 +292,9 @@ namespace DSN {
                 // So the code such as `result.Text.Split(' ').Last()` will not work for them.
                 // Be aware of this when changing the code below.
                 //
+                if (config.NeedSegmenter()) {
+                    text = Phrases.removeBlank(text);
+                }
                 if (hasSuffix(text, bothHandsSuffix)) {
                     command += BOTH_HAND_ID;
                 } else if(hasSuffix(text, rightHandSuffix)) {
