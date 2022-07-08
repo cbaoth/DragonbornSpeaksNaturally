@@ -39,6 +39,9 @@ namespace DSN
         private Grammar microsoftGrammar;
         private string jsgf;
 
+        private static Regex nonWordRegex = new Regex(@"[^\p{L}0-9.+-]");
+        private static Regex numberRegex = new Regex("[0-9]+(?:\\.[0-9]+)*");
+
         public RecognitionGrammar(Configuration config) {
             phrases = new List<RecognitionPhrase>();
             this.config = config;
@@ -86,6 +89,16 @@ namespace DSN
                 case RecognitionEngine.Voice2Json:
                     List<string> parts = new List<string>();
                     foreach (RecognitionPhrase phrase in phrases) {
+                        if (config.NeedSegmenter()) {
+                            for (int i = 0; i < phrase.Words.Count; i++) {
+                                // Remove symbols that the recognizer can't handle
+                                phrase.Words[i] = nonWordRegex.Replace(phrase.Words[i], " ");
+                                // Number to Chinese words
+                                phrase.Words[i] = numberRegex.Replace(phrase.Words[i],
+                                    str => Phrases.wordCut(ChineseNumerals.Number2ChineseJSGF(str.Value)));
+                            }
+                        }
+
                         string words;
                         if (phrase.Words.Count > 1) {
                             words = "( " + String.Join(" | ", phrase.Words) + " )";

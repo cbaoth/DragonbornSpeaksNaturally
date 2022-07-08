@@ -72,6 +72,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ChineseNumerals.cs" />
     <Compile Include="CommandList.cs" />
     <Compile Include="ConsoleInput.cs" />
     <Compile Include="Configuration.cs" />

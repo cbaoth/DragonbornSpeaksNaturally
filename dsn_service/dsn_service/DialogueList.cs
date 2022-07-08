@@ -47,7 +47,7 @@ namespace DSN {
                     continue;
                 Trace.TraceInformation("Found goodbye phrase: '{0}'", phrase);
                 try {
-                    RecognitionGrammar g = Phrases.createGrammar(phrase, config, config.IsSubsetMatchingEnabled());
+                    RecognitionGrammar g = Phrases.createGrammar(Phrases.normalize(phrase, config), config, config.IsSubsetMatchingEnabled());
                     g.Name = phrase;
                     grammarToIndex[g] = -2;
                 } catch (Exception ex) {

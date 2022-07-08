@@ -57,7 +57,7 @@ namespace DSN {
                 // The word is not in the speech engine's dictionary.
                 // Split it into individual characters.
                 if (list[i].Length > 0 && !segmenterDict.Contains(list[i])) {
-                    list[i] = characterRegex.Replace(list[i], "$0 ");
+                    list[i] = characterRegex.Replace(list[i], " $0 ");
                 }
             }
             return string.Join(" ", list);
