@@ -95,9 +95,9 @@ namespace DSN {
 
             string lc = Get("SpeechRecognition", "Locale", "");
             if (lc.Length > 0) {
-                locale = lc.ToLower().Replace('_', '-');
+                locale = lc.ToLower().Trim();
             } else {
-                locale = CultureInfo.CurrentCulture.Name.ToLower().Replace('_', '-');
+                locale = CultureInfo.CurrentCulture.Name.ToLower();
             }
 
             string engine = Get("SpeechRecognition", "Engine", "").Trim().ToLower();
