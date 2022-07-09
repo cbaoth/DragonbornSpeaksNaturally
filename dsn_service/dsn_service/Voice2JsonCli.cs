@@ -30,11 +30,17 @@ namespace DSN
             this.config = config;
             init();
         }
-        public void SetInputToDefaultAudioDevice() {
+
+        public void StopRecording() {
             if (mic != null) {
                 mic.StopRecording();
                 mic.Dispose();
+                mic = null;
             }
+        }
+
+        public void SetInputToDefaultAudioDevice() {
+            StopRecording();
             // voice2json expects 16-bit 16Khz mono audio as input
             mic = new WaveInEvent { WaveFormat = new WaveFormat(16000, 16, 1) };
             this.mic.DataAvailable += this.WaveSourceDataAvailable;
@@ -256,7 +262,7 @@ namespace DSN
             }
         }
         private void WaveSourceDataAvailable(object sender, WaveInEventArgs e) {
-            //Trace.TraceInformation("WaveSourceDataAvailable: {0}", e.BytesRecorded);
+            //Trace.TraceInformation("WaveSourceDataAvailable: {0}, {1}", sessionId, e.BytesRecorded);
             lock (ioLock) {
                 if (stdIn != null && e.BytesRecorded > 0) {
                     stdIn.WriteLine(Base64Encode(e.Buffer));

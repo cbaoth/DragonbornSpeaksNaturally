@@ -139,6 +139,7 @@ namespace DSN {
 
         public void Stop() {
             config.Stop();
+            DSN.StopRecording();
             StopRecognition();
 
             lock (dsnLock) {
