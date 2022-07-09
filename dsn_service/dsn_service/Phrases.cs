@@ -11,7 +11,8 @@ using System.Threading.Tasks;
 
 namespace DSN {
     class Phrases {
-        private static readonly string ZH_SEGMENTER_DICT_PATH = "Resources\\base_dictionary.txt";
+        private static readonly string ZH_SEGMENTER_DICT_PATH =
+            AppDomain.CurrentDomain.BaseDirectory + "\\Resources\\base_dictionary.txt";
 
         private static Regex blankRegex = new Regex("\\s+");
         private static Regex characterRegex = new Regex("\\p{IsCJKUnifiedIdeographs}");
