@@ -44,7 +44,7 @@ namespace DSN {
         //   Using single quotes with Chinese may cause exceptions.
         //   Like this: "吉'扎格的火焰风暴卷轴".
         //   So we need to remove the quote if it is not preceded by a letter.
-        private static readonly string DEFAULT_NORMALIZE_EXPRESSION = @"(?:""|\s+|(?<![a-zA-Z])')";
+        private static readonly string DEFAULT_NORMALIZE_EXPRESSION = @"(?:["",!?]|\s+|(?<![a-zA-Z])')";
         private static readonly string DEFAULT_NORMALIZE_REPLACEMENT = @" ";
 
         private static readonly string DEFAULT_OPTIONAL_EXPRESSION = @"(?:\(([^)]*)\)|\[([^\]]*)\]|{([^}]*)}|<([^>]*)>|（([^）]*)）|【([^】]*)】|〈([^〉]*)〉|﹝([^﹞]*)﹞|〔([^〕]*)〕)";
