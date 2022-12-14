@@ -1,3 +1,10 @@
+WARNING
+=======
+ALPHA TEST FORK ONLY!
+
+I made some minor modifications to the voice2json alpha branch, to be able to try and run the new voice2json w/o Docker (WSL2/Hyper-V) since I'm running the game on a Shadow cloud machine, that doesn't support virtualization (WSL1 only): https://github.com/cbaoth/DragonbornSpeaksNaturally/commits/voice2json
+
+
 Dragonborn Speaks Naturally
 ==============================
 
