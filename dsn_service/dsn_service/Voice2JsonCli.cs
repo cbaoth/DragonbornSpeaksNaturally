@@ -2,6 +2,7 @@
 using NAudio.Wave;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -68,16 +69,17 @@ namespace DSN
                     process.StartInfo.StandardOutputEncoding = System.Text.Encoding.UTF8;
                     process.StartInfo.StandardErrorEncoding = System.Text.Encoding.UTF8;
                 }
+                Trace.TraceInformation("Executing: {0} {1}", process.StartInfo.FileName, process.StartInfo.Arguments);
 
                 bool ok = false;
                 try {
                     ok = process.Start();
-                } catch {
-                    // ignore
+                } catch(Exception e) {
+                    Trace.TraceError(e.Message);
                 }
                 if (!ok) {
                     endSession();
-                    throw new Exception("Run docker command failed, make sure you have Docker Desktop installed:\n" + command + " " + args);
+                    throw new Exception(String.Format("Voice2Json execution failed, please make sure that bash (wsl) is available and voice2json is installed correctly: %s %s", command, args));
                 }
 
                 if (!elevating) {
@@ -100,54 +102,14 @@ namespace DSN
             }
         }
 
-        private void init() {
-            int exitCode;
-            if (runCommand("docker", "ps -a") != 0) {
-                string dockerDesktopPath = @"C:\Program Files\Docker\Docker";
-                try {
-                    dockerDesktopPath = Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Docker Inc.\Docker\1.0",
-                        "AppPath", @"C:\Program Files\Docker\Docker").ToString();
-                } catch {
-                    // ignore
-                }
-                dockerDesktopPath += @"\Docker Desktop.exe";
-
-                Trace.TraceInformation("Launch Docker Desktop");
-                exitCode = runCommand(dockerDesktopPath, "", 5000, true);
-                if (exitCode == 0) {
-                    Trace.TraceInformation("Wait for Docker Desktop to be ready");
-                    for (int i = 1; i < 20; i++) {
-                        if (runCommand("docker", "ps -a") == 0) {
-                            break;
-                        } else {
-                            Thread.Sleep(5000);
-                        }
-                    }
-                } else if (exitCode != 2) {
-                    Trace.TraceError("Failed to launch Docker Desktop, please make sure Docker Desktop is installed on your system.", exitCode);
-                }
-            }
-
-            Trace.TraceInformation("Launch the docker container 'dsn_voice2json'");
-            exitCode = runCommand("docker", "start dsn_voice2json");
-
-            if (exitCode != 0) {
-                Trace.TraceInformation("Create the docker container 'dsn_voice2json'");
-                exitCode = runCommand("docker", "run -dit --name dsn_voice2json --entrypoint /bin/sh synesthesiam/voice2json");
-
-                if (exitCode != 0) {
-                    throw new Exception("The Voice2Json container cannot be created automatically, " +
-                        "try creating it manually with the following command:\n" +
-                        "docker run -dit --name dsn_voice2json --entrypoint /bin/sh synesthesiam/voice2json");
-                }
-            }
-
+        private void init()
+        {
             Trace.TraceInformation("Automatically download speech recognition model files");
-            runCommand("docker", "exec dsn_voice2json sh -c \"" + 
-                "/usr/lib/voice2json/bin/voice2json -p " + config.GetLocale() + " train-profile; " +
-                "ls /root/.local/share/voice2json | while read d; " +
+            runCommand("bash", "-c \"" +
+                "voice2json -p " + config.GetLocale() + " train-profile; " +
+                "ls $HOME/.local/share/voice2json | while read d; " +
                 "do " +
-                  "ln -sf /root/sentences.ini /root/.local/share/voice2json/$d/sentences.ini; " +
+                  "ln -sf $HOME/sentences.ini $HOME/.local/share/voice2json/$d/sentences.ini; " +
                 "done" +
                 "\"");
         }
@@ -161,13 +123,16 @@ namespace DSN
                 process.StartInfo.UseShellExecute = false;
                 process.StartInfo.StandardOutputEncoding = System.Text.Encoding.UTF8;
                 process.StartInfo.StandardErrorEncoding = System.Text.Encoding.UTF8;
-                process.StartInfo.FileName = "docker";
-                process.StartInfo.Arguments = "exec -i dsn_voice2json sh -c \"base64 -id > /root/sentences.ini; " +
-                    "/usr/lib/voice2json/bin/voice2json -p " + config.GetLocale() + " train-profile\"";
+                process.StartInfo.FileName = "bash";
+                process.StartInfo.Arguments = "-c \"base64 -id > $HOME/sentences.ini; " +
+                    "voice2json -p " + config.GetLocale() + " train-profile\"";
+
+                Trace.TraceInformation("Executing: {0} {1}", process.StartInfo.FileName, process.StartInfo.Arguments);
 
                 if (!process.Start()) {
                     endSession();
-                    throw new Exception("Run docker command failed, make sure you have Docker Desktop installed.");
+                    throw new Exception(String.Format("Voice2Json execution failed, please make sure that bash (wsl) is available and voice2json is installed correctly: {0} {1}",
+                        process.StartInfo.FileName, process.StartInfo.Arguments));
                 }
 
                 readStdOut = new Thread(ReadStdOut);
@@ -184,7 +149,8 @@ namespace DSN
                 endSession();
 
                 if (exitCode != 0) {
-                    throw new Exception("Unable to access docker container 'dsn_voice2json', please make sure your Docker Desktop is running.");
+                    throw new Exception(String.Format("Voice2Json execution failed, please make sure that bash (wsl) is available and voice2json is installed correctly: {0} {1}",
+                        process.StartInfo.FileName, process.StartInfo.Arguments));
                 }
             }
         }
@@ -244,14 +210,16 @@ namespace DSN
                 process.StartInfo.UseShellExecute = false;
                 process.StartInfo.StandardOutputEncoding = System.Text.Encoding.UTF8;
                 process.StartInfo.StandardErrorEncoding = System.Text.Encoding.UTF8;
-                process.StartInfo.FileName = "docker";
-                process.StartInfo.Arguments = "exec -i dsn_voice2json sh -c \"base64 -id | /usr/lib/voice2json/bin/voice2json -p "
+                process.StartInfo.FileName = "bash";
+                process.StartInfo.Arguments = "-c \"base64 -id | voice2json -p "
                     + config.GetLocale() + " transcribe-stream --audio-source -"
-                    + " | /usr/lib/voice2json/bin/voice2json -p " + config.GetLocale() + " recognize-intent\"";
+                    + " | voice2json -p " + config.GetLocale() + " recognize-intent\"";
+                Trace.TraceInformation("Executing: {0} {1}", process.StartInfo.FileName, process.StartInfo.Arguments);
 
                 if (!process.Start()) {
                     endSession();
-                    throw new Exception("Run docker command failed, make sure you have Docker Desktop installed.");
+                    throw new Exception(String.Format("Voice2Json execution failed, please make sure that bash (wsl) is available and voice2json is installed correctly: {0} {1}",
+                        process.StartInfo.FileName, process.StartInfo.Arguments));
                 }
 
                 stdIn = process.StandardInput;
