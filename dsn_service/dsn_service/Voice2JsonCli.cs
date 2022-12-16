@@ -54,7 +54,7 @@ namespace DSN
         }
 
         private int runCommand(string command, string args = "", int waitMs = 0, bool elevating = false) {
-            lock (ioLock) {
+             lock (ioLock) {
                 process = new Process();
                 process.StartInfo.FileName = command;
                 process.StartInfo.Arguments = args;
@@ -69,7 +69,6 @@ namespace DSN
                     process.StartInfo.StandardOutputEncoding = System.Text.Encoding.UTF8;
                     process.StartInfo.StandardErrorEncoding = System.Text.Encoding.UTF8;
                 }
-                Trace.TraceInformation("Executing: {0} {1}", process.StartInfo.FileName, process.StartInfo.Arguments);
 
                 bool ok = false;
                 try {
@@ -79,7 +78,8 @@ namespace DSN
                 }
                 if (!ok) {
                     endSession();
-                    throw new Exception(String.Format("Voice2Json execution failed, please make sure that bash (wsl) is available and voice2json is installed correctly: %s %s", command, args));
+                    throw new Exception(String.Format("Voice2Json execution failed, please make sure that wsl (bash) is available and voice2json is installed correctly: {0} {1}",
+                        command, args));
                 }
 
                 if (!elevating) {
@@ -104,14 +104,12 @@ namespace DSN
 
         private void init()
         {
-            Trace.TraceInformation("Automatically download speech recognition model files");
-            runCommand("bash", "-c \"" +
-                "voice2json -p " + config.GetLocale() + " train-profile; " +
-                "ls $HOME/.local/share/voice2json | while read d; " +
-                "do " +
-                  "ln -sf $HOME/sentences.ini $HOME/.local/share/voice2json/$d/sentences.ini; " +
-                "done" +
-                "\"");
+            Trace.TraceInformation("Automatically downloading speech recognition model files and training");
+            runCommand("bash", "-c \"voice2json -p " + config.GetLocale() + " train-profile\"");
+            Trace.TraceInformation("Deploying custom sentences.ini");
+            runCommand("bash", "-c \"find ~/.local/share/voice2json -maxdepth 1 -type d | while read d; do"
+                + "  ln -sf ~/sentences.ini $d/sentences.ini;"
+                + "done\"");
         }
 
         public void LoadJSGF(string jsgf) {
@@ -124,7 +122,7 @@ namespace DSN
                 process.StartInfo.StandardOutputEncoding = System.Text.Encoding.UTF8;
                 process.StartInfo.StandardErrorEncoding = System.Text.Encoding.UTF8;
                 process.StartInfo.FileName = "bash";
-                process.StartInfo.Arguments = "-c \"base64 -id > $HOME/sentences.ini; " +
+                process.StartInfo.Arguments = "-c \"base64 -id > ~/sentences.ini; " +
                     "voice2json -p " + config.GetLocale() + " train-profile\"";
 
                 Trace.TraceInformation("Executing: {0} {1}", process.StartInfo.FileName, process.StartInfo.Arguments);
