@@ -13,6 +13,8 @@ using System.Threading.Tasks;
 namespace DSN
 {
     class Voice2JsonCli {
+        private const int TRAIN_TIMEOUT = 120000; // 2min timout for voice2json training
+
         public delegate void SpeechRecognizedHandler(string resultJson);
         public event SpeechRecognizedHandler SpeechRecognized;
 
@@ -70,6 +72,7 @@ namespace DSN
                     process.StartInfo.StandardErrorEncoding = System.Text.Encoding.UTF8;
                 }
 
+                Trace.TraceInformation("Executing: {0} {1}", command, args);
                 bool ok = false;
                 try {
                     ok = process.Start();
@@ -104,16 +107,22 @@ namespace DSN
 
         private void init()
         {
-            Trace.TraceInformation("Automatically downloading speech recognition model files and training");
-            runCommand("bash", "-c \"voice2json -p " + config.GetLocale() + " train-profile\"");
-            Trace.TraceInformation("Deploying custom sentences.ini");
-            runCommand("bash", "-c \"find ~/.local/share/voice2json -maxdepth 1 -type d | while read d; do"
-                + "  ln -sf ~/sentences.ini $d/sentences.ini;"
-                + "done\"");
+            Trace.TraceInformation("Automatically downloading speech recognition model files");
+            runCommand("bash",
+                "-c \"voice2json -p " + config.GetLocale() + " train-profile\"",
+                TRAIN_TIMEOUT);
+            Trace.TraceInformation("Deploying sentences.ini");
+            runCommand("bash", "-c \""
+                + "find ~/.local/share/voice2json/ -maxdepth 1 -type d | while read d; do"
+                + "  ln -sf ~/.dsn_sentences.ini \\${d}/sentences.ini; "
+                + "done"
+                + "\"",
+                30000); // sec timeout
         }
 
         public void LoadJSGF(string jsgf) {
             lock (ioLock) {
+                Trace.TraceInformation("Generating sentences.ini file and running training");
                 process = new Process();
                 process.StartInfo.RedirectStandardInput = true;
                 process.StartInfo.RedirectStandardOutput = true;
@@ -122,8 +131,10 @@ namespace DSN
                 process.StartInfo.StandardOutputEncoding = System.Text.Encoding.UTF8;
                 process.StartInfo.StandardErrorEncoding = System.Text.Encoding.UTF8;
                 process.StartInfo.FileName = "bash";
-                process.StartInfo.Arguments = "-c \"base64 -id > ~/sentences.ini; " +
-                    "voice2json -p " + config.GetLocale() + " train-profile\"";
+                process.StartInfo.Arguments = "-c \""
+                    + "base64 -id > ~/.dsn_sentences.ini; "
+                    + "voice2json -p " + config.GetLocale() + " train-profile"
+                    + "\"";
 
                 Trace.TraceInformation("Executing: {0} {1}", process.StartInfo.FileName, process.StartInfo.Arguments);
 
@@ -142,7 +153,7 @@ namespace DSN
                 process.StandardInput.Flush();
                 process.StandardInput.Close();
 
-                process.WaitForExit();
+                process.WaitForExit(TRAIN_TIMEOUT);
                 var exitCode = process.ExitCode;
                 endSession();
 
